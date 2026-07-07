@@ -181,7 +181,7 @@ def generate_one_day(date_str: str, initial_soc: float = 0.50, use_mpc: bool = T
             rt_agc_mw, rt_agc_miles, _
         ) = optimize_real_time_mpc(
             storage, charges, discharges, adj_agc_caps,
-            lmp_curve, rt_lmp_curve, agc_commands, agc_mileage_price,
+            lmp_curve, da_soc_path, rt_lmp_curve, agc_commands, agc_mileage_price,
             settlement, initial_soc,
             final_soc_target=storage.initial_soc,
             horizon=mpc_horizon,
@@ -393,8 +393,8 @@ if __name__ == "__main__":
         help="禁用滚动 MPC, 使用全局 hindsight 优化生成实时调度",
     )
     parser.add_argument(
-        "--horizon", type=int, default=8,
-        help="MPC 预测窗口长度 (默认 8, 即 2 小时)",
+        "--horizon", type=int, default=24,
+        help="MPC 预测窗口长度 (默认 24, 即 6 小时)",
     )
     args = parser.parse_args()
     main(use_mpc=not args.no_mpc, mpc_horizon=args.horizon)

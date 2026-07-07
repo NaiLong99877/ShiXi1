@@ -649,6 +649,7 @@ def optimize_real_time_mpc(
     da_discharge: List[float],
     da_agc_cap: List[float],
     da_lmp: List[float],
+    da_soc: List[float],
     rt_lmp: List[float],
     agc_commands: List[float],
     agc_mileage_price: float,
@@ -656,7 +657,7 @@ def optimize_real_time_mpc(
     initial_soc: float,
     final_soc_target: Optional[float] = None,
     agc_reserve_mw: Optional[float] = None,
-    horizon: int = 8,
+    horizon: int = 24,
     n_states: int = 401,
     lmp_bias_decay: float = 0.8,
     agc_forecast_mode: str = "zero",
@@ -665,19 +666,17 @@ def optimize_real_time_mpc(
     滚动 MPC 实时调度。
 
     每个时刻 t 只利用当前已观测信息, 预测未来 H 个时段, 优化后仅执行第一个时段的套利决策。
+    为避免短视, 每个优化窗口的终端 SOC 目标采用日前计划的 SOC 轨迹。
 
     信息集 (时刻 t 已知):
       - 当前 SOC
       - rt_lmp[0:t]   (已观测实时 LMP)
       - agc_commands[0:t] (已观测 AGC 指令)
-      - da_lmp[t:], da_charge[t:], da_discharge[t:] (日前计划作为预测基线)
-
-    预测方法:
-      - LMP: 日前基线 + 最新观测偏差按 lmp_bias_decay 衰减
-      - AGC: 默认保守地预测为 0 (mode="zero")
+      - da_lmp[t:], da_charge[t:], da_discharge[t:], da_soc[t:] (日前计划作为基线)
 
     Args:
-        horizon: 预测优化窗口长度 (默认 8 个 15 分钟时段 = 2 小时)
+        da_soc: 日前优化得到的 SOC 轨迹 (96点), 用作各窗口终端目标
+        horizon: 预测优化窗口长度 (默认 24 个 15 分钟时段 = 6 小时)
         lmp_bias_decay: 实时 LMP 偏差衰减系数
         agc_forecast_mode: "zero" | "persistence" | "expected"
 
@@ -735,7 +734,12 @@ def optimize_real_time_mpc(
         sub_da_agc_cap = da_agc_cap[t:end]
 
         # 5. 对窗口做 DP 优化
-        sub_final_soc_target = final_soc_target if end == T else None
+        # 终端 SOC 目标: 尽量跟随日前 SOC 轨迹, 最后一天末使用最终目标
+        if end == T and final_soc_target is not None:
+            sub_final_soc_target = final_soc_target
+        else:
+            sub_final_soc_target = da_soc[end - 1]  # 窗口最后一个时段的日前 SOC
+
         (
             sub_actual_charge, sub_actual_discharge,
             sub_arbitrage_charge, sub_arbitrage_discharge,
