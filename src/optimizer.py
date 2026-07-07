@@ -267,7 +267,7 @@ def optimize_day_ahead(
     agc_mileage_price: float,
     initial_soc: float,
     final_soc_target: Optional[float] = None,
-    final_soc_penalty: float = 50000.0,
+    final_soc_penalty: float = 500000.0,
     agc_reserve_mw: Optional[float] = None,
     agc_max_capacity_mw: Optional[float] = None,
     n_states: int = 401,
@@ -458,6 +458,41 @@ def optimize_real_time(
     ]
     dp[0][init_s] = (0.0, -1, 0.0)
 
+    # 偏差考核参数
+    tolerance = settlement.deviation_tolerance
+    penalty_rate = settlement.deviation_penalty_rate
+
+    def _period_net_profit(
+        arb_charge: float,
+        arb_discharge: float,
+        agc_charge: float,
+        agc_discharge: float,
+    ) -> float:
+        """
+        单时段净利润 = 电能量收入 - 偏差考核罚款 + AGC里程收入
+        """
+        actual_c = arb_charge + agc_charge
+        actual_d = arb_discharge + agc_discharge
+
+        # 电能量收入 (按实时LMP结算)
+        energy_mwh = (actual_d - actual_c) * hours
+        energy_rev = energy_mwh * rt_lmp[t]
+
+        # 偏差考核罚款
+        charge_dev = abs(actual_c - da_charge[t])
+        discharge_dev = abs(actual_d - da_discharge[t])
+        charge_tolerated = da_charge[t] * tolerance
+        discharge_tolerated = da_discharge[t] * tolerance
+        charge_excess = max(0.0, charge_dev - charge_tolerated)
+        discharge_excess = max(0.0, discharge_dev - discharge_tolerated)
+        penalty_mwh = (charge_excess + discharge_excess) * hours
+        penalty = penalty_mwh * rt_lmp[t] * penalty_rate
+
+        # AGC里程收入
+        agc_mil_rev = (agc_charge + agc_discharge) * agc_mileage_price
+
+        return energy_rev - penalty + agc_mil_rev
+
     # ---- 前向DP ----
     for t in range(T):
         src = dp[t]
@@ -471,34 +506,28 @@ def optimize_real_time(
 
             # 计算当前 SOC 状态下 AGC 的有效出力 (考虑 SOC 硬边界截断)
             if agc > 0:
-                # AGC 放电指令
                 max_discharge_dc = max(0.0, (soc_of[s] - storage.soc_min) * capacity)
                 plan_discharge_dc = agc * hours / eta_dis
                 eff_discharge_dc = min(plan_discharge_dc, max_discharge_dc)
                 eff_agc_d = eff_discharge_dc * eta_dis / hours
+                eff_agc_c = 0.0
                 agc_delta = -eff_discharge_dc / capacity
-                agc_energy_profit = eff_agc_d * hours * rt_lmp[t]
-                agc_mil_rev = eff_agc_d * agc_mileage_price
             elif agc < 0:
-                # AGC 充电指令
                 max_charge_dc = max(0.0, (storage.soc_max - soc_of[s]) * capacity)
                 plan_charge_dc = abs(agc) * hours * eta_chg
                 eff_charge_dc = min(plan_charge_dc, max_charge_dc)
                 eff_agc_c = eff_charge_dc / (hours * eta_chg)
-                agc_delta = eff_charge_dc / capacity
-                agc_energy_profit = -eff_agc_c * hours * rt_lmp[t]
-                agc_mil_rev = eff_agc_c * agc_mileage_price
-            else:
                 eff_agc_d = 0.0
+                agc_delta = eff_charge_dc / capacity
+            else:
                 eff_agc_c = 0.0
+                eff_agc_d = 0.0
                 agc_delta = 0.0
-                agc_energy_profit = 0.0
-                agc_mil_rev = 0.0
 
             # 闲置: 只响应 AGC, 套利功率 = 0
+            idle_profit = _period_net_profit(0.0, 0.0, eff_agc_c, eff_agc_d)
             end_soc = soc_of[s] + agc_delta - self_discharge_mwh / capacity
             idle_s = _state_from_soc(end_soc, storage, N)
-            idle_profit = agc_energy_profit + agc_mil_rev
             new_p = cur_profit + idle_profit
             if new_p > dst[idle_s][0]:
                 dst[idle_s] = (new_p, s, 0.0)
@@ -524,7 +553,7 @@ def optimize_real_time(
                 if p_charge < 0.01:
                     continue
 
-                profit = -p_charge * hours * rt_lmp[t]  # 充电成本
+                profit = _period_net_profit(p_charge, 0.0, 0.0, 0.0)
                 new_p = cur_profit + profit
                 end_soc = soc_of[s_next] - self_discharge_mwh / capacity
                 s_next_eff = _state_from_soc(end_soc, storage, N)
@@ -547,7 +576,7 @@ def optimize_real_time(
                 if p_discharge < 0.01:
                     continue
 
-                profit = p_discharge * hours * rt_lmp[t]  # 放电收入
+                profit = _period_net_profit(0.0, p_discharge, 0.0, 0.0)
                 new_p = cur_profit + profit
                 end_soc = soc_of[s_next] - self_discharge_mwh / capacity
                 s_next_eff = _state_from_soc(end_soc, storage, N)
@@ -557,13 +586,17 @@ def optimize_real_time(
     # ---- 选择最优终态 ----
     if final_soc_target is not None:
         target_s = _state_from_soc(final_soc_target, storage, N)
-        window = 5
-        candidates = range(max(0, target_s - window),
-                          min(N, target_s + window + 1))
+        # 软终端惩罚: 用二次惩罚替代硬窗口, 避免细离散化时目标不可达
+        final_soc_penalty_rt = 100000.0
+        def _rt_score(s):
+            profit = dp[T][s][0]
+            if profit <= NEG_INF / 2:
+                return NEG_INF
+            deviation = abs(soc_of[s] - final_soc_target)
+            return profit - final_soc_penalty_rt * deviation ** 2
+        best_s = max(range(N), key=_rt_score)
     else:
-        candidates = range(N)
-
-    best_s = max(candidates, key=lambda s: dp[T][s][0])
+        best_s = max(range(N), key=lambda s: dp[T][s][0])
 
     # ---- 回溯提取功率路径 ----
     powers = [0.0] * T
