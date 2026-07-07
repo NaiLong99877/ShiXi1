@@ -300,12 +300,11 @@ def optimize_day_ahead(
     energy_power_limit = storage.rated_power_mw - agc_reserve_mw
     # 每时段自放电量 (DC 侧 MWh)
     self_discharge_mwh = storage.self_discharge_rate * 0.25 * storage.rated_capacity_mwh
-    # AGC里程比 (每MW容量产生多少里程, 行业经验值)
-    mileage_ratio = 0.4
 
     def da_profit_fn(t: int, p_charge: float, p_discharge: float) -> float:
         """
-        利润 = 能量套利 + AGC容量收益 + AGC里程收益
+        利润 = 能量套利 + AGC容量收益
+        (AGC里程收益不纳入日前优化, 避免高估稀疏 AGC 指令带来的里程)
         """
         hours = 0.25
         # 能量套利 (电网侧)
@@ -323,11 +322,7 @@ def optimize_day_ahead(
         # AGC容量收益 (Kp系数简化取1.0)
         agc_cap_rev = agc_cap * agc_prices[t] * hours
 
-        # AGC里程收益
-        agc_mileage = agc_cap * mileage_ratio
-        agc_mil_rev = agc_mileage * agc_mileage_price
-
-        return energy_profit + agc_cap_rev + agc_mil_rev
+        return energy_profit + agc_cap_rev
 
     powers, final_soc = _dp_core(
         n_intervals=len(lmp_pred),
