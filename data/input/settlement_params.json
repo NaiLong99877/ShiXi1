@@ -1,0 +1,11 @@
+{
+  "deviation_tolerance": 0.03,
+  "deviation_penalty_rate": 0.1,
+  "transmission_fee_rate": 0.03,
+  "gov_fund_rate": 0.019,
+  "ancillary_cost_rate": 0.005,
+  "agc_unqualified_penalty": 500.0,
+  "battery_degradation_per_mwh": 0.0,
+  "self_consumption_rate": 0.0,
+  "daily_om_cost_yuan": 0.0
+}

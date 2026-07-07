@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>储能电站日收益看板</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  background: #f1f5f9; color: #1e293b; min-height: 100vh;
+}
+
+/* ===== Header ===== */
+.header {
+  background: #ffffff;
+  padding: 16px 30px; border-bottom: 1px solid #e2e8f0;
+  display: flex; justify-content: space-between; align-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.header h1 { font-size: 22px; color: #2563eb; }
+.header .info { font-size: 13px; color: #64748b; }
+.header .info span { color: #2563eb; margin: 0 6px; }
+
+/* ===== Date Bar ===== */
+.date-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 30px; background: #ffffff;
+  border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #64748b;
+}
+.date-bar select {
+  padding: 4px 12px; border-radius: 6px; border: 1px solid #cbd5e1;
+  background: #ffffff; color: #1e293b; font-size: 13px; font-family: inherit;
+  cursor: pointer; min-width: 140px;
+}
+.date-bar select:focus { outline: none; border-color: #2563eb; }
+#date-profit-preview .pos { color: #16a34a; }
+#date-profit-preview .neg { color: #dc2626; }
+
+/* ===== Tab Navigation ===== */
+.tab-nav {
+  display: flex; background: #ffffff; border-bottom: 1px solid #e2e8f0;
+  padding: 0 16px; gap: 2px; overflow-x: auto;
+}
+.tab-btn {
+  padding: 12px 18px; border: none; background: transparent;
+  color: #64748b; cursor: pointer; font-size: 13px; font-family: inherit;
+  border-bottom: 3px solid transparent; white-space: nowrap;
+  transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+}
+.tab-btn:hover { color: #1e293b; background: #f8fafc; }
+.tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: bold; }
+
+/* ===== Content ===== */
+.page { display: none; }
+.page.active { display: block; }
+.container { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px; max-width: 1600px; margin: 0 auto; }
+
+.card {
+  background: #ffffff; border-radius: 12px;
+  border: 1px solid #e2e8f0; padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.card.full-width { grid-column: 1 / -1; }
+.card-title {
+  font-size: 15px; font-weight: 600; color: #1e293b;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex; align-items: center; gap: 8px;
+}
+.chart { width: 100%; height: 320px; }
+
+/* 汇总卡片 */
+.summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.summary-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 12px; text-align: center;
+}
+.summary-item .label { font-size: 11px; color: #64748b; margin-bottom: 4px; }
+.summary-item .value { font-size: 20px; font-weight: bold; }
+.summary-item .value.positive { color: #16a34a; }
+.summary-item .value.negative { color: #dc2626; }
+.summary-item .value.neutral { color: #2563eb; }
+.summary-item .sub { font-size: 10px; color: #64748b; margin-top: 3px; }
+
+/* 参数展示 */
+.param-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.param-item {
+  background: #f8fafc; border-radius: 8px; padding: 12px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.param-item .p-label { font-size: 13px; color: #64748b; }
+.param-item .p-value { font-size: 18px; font-weight: bold; color: #2563eb; }
+.param-item .p-unit { font-size: 11px; color: #64748b; margin-left: 4px; }
+
+/* 表格 */
+.table-wrap { max-height: 420px; overflow-y: auto; }
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.table-wrap th {
+  background: #f8fafc; color: #2563eb; padding: 7px 5px;
+  position: sticky; top: 0; z-index: 1;
+  border-bottom: 2px solid #e2e8f0;
+}
+.table-wrap td { padding: 4px 5px; border-bottom: 1px solid #f1f5f9; text-align: right; }
+.table-wrap td:first-child { text-align: center; color: #64748b; }
+.table-wrap tr:hover { background: #f8fafc; }
+.table-wrap .pos { color: #16a34a; }
+.table-wrap .neg { color: #dc2626; }
+
+.loading {
+  display: flex; justify-content: center; align-items: center;
+  height: 300px; font-size: 16px; color: #64748b;
+}
+.error { color: #dc2626; text-align: center; padding: 40px; }
+
+@media (max-width: 900px) {
+  .container { grid-template-columns: 1fr; }
+  .summary-cards { grid-template-columns: repeat(2, 1fr); }
+  .param-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🔋 储能电站日收益看板</h1>
+    <div class="info">
+      日期: <span id="info-date">--</span> |
+      节点: <span id="info-node">--</span> |
+      电站: <span id="info-storage">--</span> |
+      Kp: <span id="info-kp">--</span>
+    </div>
+  </div>
+  <div style="text-align:right; font-size:12px; color:#64748b;">
+    基于《山东电力市场规则（试行）（2026年修订版）》<br>
+    <span style="color:#16a34a; font-size:20px; font-weight:bold;" id="net-profit-big">--</span>
+  </div>
+</div>
+
+<!-- 日期选择栏 -->
+<div class="date-bar">
+  <span>📅 选择日期:</span>
+  <select id="date-selector"></select>
+  <span id="date-profit-preview" style="margin-left:16px;font-size:14px;"></span>
+</div>
+
+<!-- Tab 导航 -->
+<div class="tab-nav">
+  <button class="tab-btn active" data-page="page-profit">📊 收益看板</button>
+  <button class="tab-btn" data-page="page-dayahead">📋 日前中标情况</button>
+  <button class="tab-btn" data-page="page-storage">🔋 储能聚合模型</button>
+  <button class="tab-btn" data-page="page-params">⚙️ AGC与结算参数</button>
+</div>
+
+<!-- Page 1: 收益看板 (含实时运行数据) -->
+<div class="page active" id="page-profit">
+  <div class="container" id="profit-content"><div class="loading">⏳ 加载中...</div></div>
+</div>
+
+<!-- Page 2: 日前中标情况 -->
+<div class="page" id="page-dayahead">
+  <div class="container" id="da-content"><div class="loading">⏳ 加载中...</div></div>
+</div>
+
+<!-- Page 3: 储能聚合模型 -->
+<div class="page" id="page-storage">
+  <div class="container" id="sp-content"><div class="loading">⏳ 加载中...</div></div>
+</div>
+
+<!-- Page 4: AGC与结算参数 -->
+<div class="page" id="page-params">
+  <div class="container" id="ap-content"><div class="loading">⏳ 加载中...</div></div>
+</div>
+
+<script>
+// ===== 全局状态 =====
+const COLORS = {
+  green: '#16a34a', red: '#dc2626', blue: '#2563eb',
+  orange: '#ea580c', purple: '#7c3aed', cyan: '#0891b2',
+  yellow: '#ca8a04', gray: '#64748b',
+};
+const AVAILABLE_DATES = ['2026-06-24','2026-06-25','2026-06-26','2026-06-27','2026-06-28','2026-06-29','2026-06-30'];
+let ALL_DATA = {};     // 缓存: shared数据 + 当前日期数据
+let currentDate = '';  // 当前选中日期
+let activeCharts = []; // 当前页面的echarts实例
+let currentPage = 'page-profit';
+
+// ===== 工具函数 =====
+function timeToHour(t) { const [h,m]=t.split(':').map(Number); return h+m/60; }
+function fmt(n,d=0) { return Number(n).toLocaleString('zh-CN',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function fmtPct(n) { return (n*100).toFixed(1)+'%'; }
+
+async function loadJSON(url) {
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${url}`);
+  return resp.json();
+}
+
+// 加载共享数据 (不随日期变化的)
+async function loadSharedData() {
+  const urls = {
+    storage: '../data/input/storage_params.json',
+    agc:     '../data/input/agc_performance.json',
+    settle:  '../data/input/settlement_params.json',
+  };
+  const results = await Promise.allSettled(
+    Object.entries(urls).map(([k, url]) => loadJSON(url).then(d => ({[k]: d})))
+  );
+  for (const r of results) {
+    if (r.status === 'fulfilled') Object.assign(ALL_DATA, r.value);
+    else console.warn('Failed:', r.reason);
+  }
+}
+
+// 加载指定日期的数据
+async function loadDateData(dateStr) {
+  const urls = {
+    daily:    `../data/output/${dateStr}_daily_result.json`,
+    dayAhead: `../data/input/${dateStr}_day_ahead_market.json`,
+    realTime: `../data/output/${dateStr}_real_time_dispatch.json`,
+  };
+  const results = await Promise.allSettled(
+    Object.entries(urls).map(([k, url]) => loadJSON(url).then(d => ({[k]: d})))
+  );
+  for (const r of results) {
+    if (r.status === 'fulfilled') Object.assign(ALL_DATA, r.value);
+    else console.warn('Failed:', r.reason);
+  }
+  currentDate = dateStr;
+}
+
+// 销毁图表
+function disposeCharts() {
+  activeCharts.forEach(c => { try { c.dispose(); } catch(e){} });
+  activeCharts = [];
+}
+
+// 创建echarts实例 (自动追踪)
+function initChart(domId) {
+  const dom = document.getElementById(domId);
+  if (!dom) return null;
+  const exist = echarts.getInstanceByDom(dom);
+  if (exist) exist.dispose();
+  const chart = echarts.init(dom);
+  activeCharts.push(chart);
+  return chart;
+}
+
+// ===== Tab 切换 =====
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const pageId = btn.dataset.page;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    disposeCharts();
+    switchPage(pageId);
+  });
+});
+
+function switchPage(pageId) {
+  switch(pageId) {
+    case 'page-profit':   renderProfitPage(); break;
+    case 'page-dayahead': renderDayAheadPage(); break;
+    case 'page-storage':  renderStoragePage(); break;
+    case 'page-params':   renderParamsPage(); break;
+  }
+}
+
+// ==================== Page 1: 收益看板 ====================
+function renderProfitPage() {
+  const data = ALL_DATA.daily;
+  if (!data) {
+    document.getElementById('profit-content').innerHTML = '<div class="error">数据未加载</div>';
+    return;
+  }
+  const s = data.summary;
+  const intervals = data.intervals;
+  const times = intervals.map(d => d.time);
+  // 实时运行数据 (用于收益看板中的实际功率-SOC曲线, 以及底部实时数据区域)
+  const rtData = computeRealTimeData();
+  const rtTimes = rtData ? rtData.times : times;
+  // 电能量收入(含AGC电量)已由 Python 后端计算并写入 daily_result.json,
+  // 看板不再重复叠加, 避免重复计算。
+  // 统一更新Header (放在所有调整之后)
+  document.getElementById('net-profit-big').textContent = '¥' + fmt(s.net_profit, 2);
+  document.getElementById('info-date').textContent = data.date;
+  document.getElementById('info-node').textContent = data.node_name;
+  document.getElementById('info-storage').textContent = data.storage_name;
+  document.getElementById('info-kp').textContent = s.kp.toFixed(4);
+  document.getElementById('date-profit-preview').innerHTML =
+    s.net_profit >= 0
+      ? `<span class="pos">当日净收益: ¥${fmt(s.net_profit)}</span>`
+      : `<span class="neg">当日净收益: -¥${fmt(Math.abs(s.net_profit))}</span>`;
+
+  // 实时运行汇总数据
+  const rtSummary = rtData ? {
+    rtLMPAvg: fmt(rtData.rtLMP.reduce((a,b)=>a+b,0)/96, 1),
+    chgTotal: fmt(rtData.chg.reduce((a,b)=>a+b,0)*0.25, 0),
+    disTotal: fmt(rtData.dis.reduce((a,b)=>a+b,0)*0.25, 0),
+    mileageTotal: fmt(rtData.mileage.reduce((a,b)=>a+b,0), 0),
+    lmpDevAvg: fmt(rtData.lmpDev.reduce((a,b)=>a+b,0)/96, 1),
+    agcAvg: fmt(rtData.agc.reduce((a,b)=>a+b,0)/96, 1),
+    lmpDevPos: rtData.lmpDev.reduce((a,b)=>a+b,0) > 0,
+  } : null;
+
+  document.getElementById('profit-content').innerHTML = `
+    <div class="card full-width">
+      <div class="card-title">📊 收益汇总</div>
+      <div class="summary-cards">
+        <div class="summary-item">
+          <div class="label">电能量套利收益</div>
+          <div class="value ${s.total_energy_revenue>=0?'positive':'negative'}">¥${fmt(s.total_energy_revenue)}</div>
+          <div class="sub">充电 ${s.total_charge_mwh}MWh | 放电 ${s.total_discharge_mwh}MWh</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">调频容量收益</div>
+          <div class="value neutral">¥${fmt(s.total_agc_capacity_revenue)}</div>
+          <div class="sub">Kp = ${s.kp.toFixed(4)}</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">调频里程收益</div>
+          <div class="value neutral">¥${fmt(s.total_agc_mileage_revenue)}</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">总收入</div>
+          <div class="value positive">¥${fmt(s.total_gross_revenue)}</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">市场结算费用</div>
+          <div class="value negative">-¥${fmt(s.total_market_cost)}</div>
+          <div class="sub">偏差${fmt(s.total_deviation_penalty)} | 输配${fmt(s.total_transmission_fee)} | 其他${fmt(s.total_gov_fund_fee+s.total_ancillary_fee+s.agc_unqualified_penalty,0)}</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">运行成本</div>
+          <div class="value negative">-¥${fmt(s.total_operating_cost)}</div>
+          <div class="sub">衰减${fmt(s.total_battery_degradation)} | 用电${fmt(s.total_self_consumption)} | 运维${fmt(s.total_om_cost)}</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">总费用</div>
+          <div class="value negative">-¥${fmt(s.total_cost)}</div>
+          <div class="sub">市场${fmt(s.total_market_cost)} + 运行${fmt(s.total_operating_cost)}</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">⚡ 净利润</div>
+          <div class="value ${s.net_profit>=0?'positive':'negative'}" style="font-size:24px;">¥${fmt(s.net_profit)}</div>
+          <div class="sub">日末SOC: ${fmtPct(s.final_soc)}</div>
+        </div>
+      </div>
+    </div>
+    ${rtSummary ? `
+    <div class="card full-width">
+      <div class="card-title">📡 实时运行数据 — ${ALL_DATA.realTime.date}</div>
+      <div class="summary-cards">
+        <div class="summary-item"><div class="label">实时LMP均价</div><div class="value neutral">${rtSummary.rtLMPAvg} 元/MWh</div></div>
+        <div class="summary-item"><div class="label">实际充电总量</div><div class="value positive">${rtSummary.chgTotal} MWh</div></div>
+        <div class="summary-item"><div class="label">实际放电总量</div><div class="value positive">${rtSummary.disTotal} MWh</div></div>
+        <div class="summary-item"><div class="label">AGC总里程</div><div class="value neutral">${rtSummary.mileageTotal} MW</div></div>
+        <div class="summary-item"><div class="label">日前vs实时LMP偏差</div><div class="value ${rtSummary.lmpDevPos?'positive':'negative'}">${rtSummary.lmpDevAvg} 元/MWh</div></div>
+        <div class="summary-item"><div class="label">AGC平均出力</div><div class="value neutral">${rtSummary.agcAvg} MW</div></div>
+      </div>
+    </div>
+    ` : ''}
+    <div class="card full-width"><div class="card-title">📈 LMP电价曲线</div><div class="chart" id="p1-lmp"></div></div>
+    <div class="card full-width"><div class="card-title">🔌 充放电功率 & 🔋 SOC曲线</div><div class="chart" id="p1-power-soc" style="height:380px;"></div></div>
+    <div class="card"><div class="card-title">📡 AGC收益时序</div><div class="chart" id="p1-agc"></div></div>
+    <div class="card"><div class="card-title">🥧 收益构成</div><div class="chart" id="p1-pie"></div></div>
+    <div class="card full-width"><div class="card-title">📊 分时段收益分解 (每小时)</div><div class="chart" id="p1-decompose" style="height:400px;"></div></div>
+  `;
+
+  // LMP K线图 + 买卖点
+  (function(){
+    const chart = initChart('p1-lmp');
+    const lmpVals = intervals.map(d=>d.lmp);
+    const ohlc=[], buyPts=[], sellPts=[];
+    for (let i=0;i<96;i++) {
+      // 收盘价 = 真实LMP价格
+      const close = lmpVals[i];
+      // 前15分钟收盘价 (第一个时段用自身)
+      const prevClose = i>0 ? lmpVals[i-1] : lmpVals[0];
+      // 开盘价 = (收盘价 + 前15分钟收盘价) / 2 + 随机偏移, 取整
+      const avgPrice = (close + prevClose) / 2;
+      const shift = Math.round((Math.random() - 0.5) * 40);
+      const open = Math.round(avgPrice + shift);
+      // 实体范围
+      const bodyHi = Math.max(open, close);
+      const bodyLo = Math.min(open, close);
+      // 高 = max(收,开) + 随机偏移(取整);  低 = min(收,开) - 随机偏移(取整)
+      const wickUp   = Math.round(Math.random() * 20 + 2);
+      const wickDown = Math.round(Math.random() * 20 + 2);
+      ohlc.push([open, close, Math.round(bodyLo - wickDown), Math.round(bodyHi + wickUp)]);
+      if (intervals[i].net_power_mw<0) buyPts.push({i, pwr:Math.abs(intervals[i].net_power_mw)});
+      if (intervals[i].net_power_mw>0) sellPts.push({i, pwr:intervals[i].net_power_mw});
+    }
+    buyPts.sort((a,b)=>b.pwr-a.pwr); sellPts.sort((a,b)=>b.pwr-a.pwr);
+    const bMarkers = buyPts.slice(0,6).map(d=>({coord:[d.i,ohlc[d.i][2]],symbolOffset:[0,'30%'],symbolRotate:180}));
+    const sMarkers = sellPts.slice(0,6).map(d=>({coord:[d.i,ohlc[d.i][3]],symbolOffset:[0,'-30%']}));
+
+    chart.setOption({
+      tooltip:{trigger:'axis',formatter:function(ps){
+        const p=ps[0]; if(!p) return'';
+        const idx=p.dataIndex ?? 0;     // 当前数据索引
+        const d=ohlc[idx];              // [open, close, low, high]
+        if(!d) return'';
+        // 涨跌幅 = 本15分钟收盘价 相对 前15分钟收盘价
+        const prevClose = idx>0 ? lmpVals[idx-1] : lmpVals[0];
+        const chgPct = prevClose ? ((d[1] - prevClose) / prevClose * 100) : 0;
+        const chgStr = (chgPct>=0 ? '+' : '') + chgPct.toFixed(2)+'%';
+        const chgColor = chgPct>=0 ? '#dc2626' : '#16a34a';
+        return `<b>${times[idx]}</b><br/>` +
+               `开 ${d[0]}  收 ${Math.round(d[1])}<br/>` +
+               `高 ${d[3]}  低 ${d[2]}<br/>` +
+               `涨跌 <b style="color:${chgColor}">${chgStr}</b>`;
+      }},
+      legend:{data:['K线'],textStyle:{color:'#64748b'},bottom:0},
+      grid:{left:60,right:30,top:40,bottom:70},
+      dataZoom:[
+        {type:'slider',bottom:10,height:25,start:0,end:100,
+         textStyle:{color:'#64748b',fontSize:10},fillerColor:'rgba(84,160,255,0.15)',
+         borderColor:'#cbd5e1',backgroundColor:'#e2e8f0',handleStyle:{color:'#2563eb'}},
+        {type:'inside',start:0,end:100},
+      ],
+      xAxis:{type:'category',data:times,axisLabel:{color:'#64748b',fontSize:10,interval:15}},
+      yAxis:{type:'value',name:'元/MWh',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      series:[
+        {name:'K线',type:'candlestick',data:ohlc,
+         // 阳线(收>=开):红底红框; 阴线(收<开):绿底绿框
+         itemStyle:{color:'transparent',color0:COLORS.green,borderColor:COLORS.red,borderColor0:COLORS.green,borderWidth:1.5},
+         barWidth:'78%',
+         markPoint:{symbol:'pin',symbolSize:15,label:{fontSize:7,fontWeight:'bold',color:'#fff',position:'inside'},
+           data:[
+             ...sMarkers.map(d=>({...d,itemStyle:{color:COLORS.green},label:{formatter:'S'}})),
+             ...bMarkers.map(d=>({...d,itemStyle:{color:COLORS.red},label:{formatter:'B',offset:[0,3]}})),
+           ]
+         }},
+      ],
+    });
+    chart.on('datazoom',function(){
+      const o=chart.getOption(),ds=o.dataZoom[0];
+      const s=ds.startValue??0,e=ds.endValue??95;
+      let mn=Infinity,mx=-Infinity;
+      for(let i=s;i<=e;i++){const d=ohlc[i];if(!d)continue;if(d[2]<mn)mn=d[2];if(d[3]>mx)mx=d[3];}
+      if(mn<mx) chart.setOption({yAxis:{min:Math.round(mn*0.98),max:Math.round(mx*1.02)}});
+    });
+    chart.dispatchAction({type:'dataZoom',start:0,end:100});
+  })();
+
+  // 充放电功率 + SOC曲线 (双轴合并) — 使用实时运行数据
+  (function(){
+    const chart = initChart('p1-power-soc');
+    // 使用 precomputed rtData (已含SOC约束); fallback 到日前调度数据
+    let chgData, disData, agcData, socPath;
+    if (rtData) {
+      chgData = rtData.chg;
+      disData = rtData.dis;
+      agcData = rtData.agc;
+      socPath = rtData.socPath;          // 已在 computeRealTimeData 中做过SOC约束仿真
+    } else {
+      chgData = intervals.map(d => d.net_power_mw < 0 ? Math.abs(d.net_power_mw) : 0);
+      disData = intervals.map(d => d.net_power_mw > 0 ? d.net_power_mw : 0);
+      agcData = intervals.map(() => 0);
+      socPath = intervals.map(d => +(d.soc * 100).toFixed(2));
+    }
+    chart.setOption({
+      tooltip: {
+        trigger: 'axis',
+        formatter: function(params) {
+          let html = `<b>${params[0].axisValue}</b><br/>`;
+          params.forEach(p => {
+            if (p.seriesName === 'SOC') {
+              html += `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:4px;"></span>`;
+              html += `SOC: <b>${p.value}%</b><br/>`;
+            } else {
+              html += `<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${p.color};margin-right:4px;"></span>`;
+              html += `${p.seriesName}: <b>${p.value} MW</b><br/>`;
+            }
+          });
+          return html;
+        }
+      },
+      legend: { data: ['充电','放电','AGC指令','SOC'], textStyle: { color: '#64748b' }, bottom: 0 },
+      grid: { left: 70, right: 70, top: 20, bottom: 70 },
+      dataZoom: [
+        { type: 'slider', bottom: 10, height: 25, start: 0, end: 100,
+          textStyle: { color: '#64748b', fontSize: 10 }, fillerColor: 'rgba(84,160,255,0.15)',
+          borderColor: '#cbd5e1', backgroundColor: '#e2e8f0', handleStyle: { color: '#2563eb' } },
+        { type: 'inside', start: 0, end: 100 },
+      ],
+      xAxis: { type: 'category', data: rtTimes, axisLabel: { color: '#64748b', fontSize: 10, interval: 15 } },
+      yAxis: [
+        {
+          type: 'value', name: 'MW', nameTextStyle: { color: '#64748b' },
+          axisLabel: { color: '#64748b' }, splitLine: { lineStyle: { color: '#e2e8f0' } },
+        },
+        {
+          type: 'value', name: 'SOC(%)', min: 0, max: 100,
+          nameTextStyle: { color: '#64748b' }, axisLabel: { color: '#64748b', formatter: '{value}%' },
+          splitLine: { show: false },
+        },
+      ],
+      series: [
+        {
+          name: '充电', type: 'bar', data: chgData.map(v => -v), yAxisIndex: 0,
+          itemStyle: { color: COLORS.green }, barWidth: '70%', barGap: '-100%',
+        },
+        {
+          name: '放电', type: 'bar', data: disData, yAxisIndex: 0,
+          itemStyle: { color: COLORS.red }, barWidth: '70%', barGap: '-100%',
+        },
+        {
+          name: 'AGC指令', type: 'line', data: agcData, yAxisIndex: 0,
+          smooth: true, symbol: 'none',
+          lineStyle: { color: COLORS.cyan, width: 1.5, type: 'dotted' },
+        },
+        {
+          name: 'SOC', type: 'line', data: socPath, yAxisIndex: 1,
+          smooth: true, symbol: 'none',
+          lineStyle: { color: COLORS.yellow, width: 2.5 },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(254,202,87,0.4)' },
+              { offset: 1, color: 'rgba(254,202,87,0.03)' },
+            ]),
+          },
+          markLine: {
+            silent: true, symbol: 'none',
+            data: [
+              { yAxis: 10, label: { formatter: '下限10%', color: '#64748b' }, lineStyle: { color: COLORS.red, type: 'dashed' } },
+              { yAxis: 90, label: { formatter: '上限90%', color: '#64748b' }, lineStyle: { color: COLORS.orange, type: 'dashed' } },
+            ],
+          },
+        },
+      ],
+    });
+  })();
+
+  // AGC收益时序 — 里程收益随AGC指令稀疏化
+  (function(){
+    const chart = initChart('p1-agc');
+    const capRev = intervals.map(d=>d.agc_capacity_revenue);
+    const milRev = intervals.map((d, i) => (rtData && rtData.agc[i] !== 0) ? d.agc_mileage_revenue : 0);
+    chart.setOption({
+      tooltip:{trigger:'axis'},
+      legend:{data:['容量收益','里程收益'],textStyle:{color:'#64748b'},bottom:0},
+      grid:{left:70,right:20,top:20,bottom:35},
+      xAxis:{type:'category',data:times,axisLabel:{color:'#64748b',fontSize:10,interval:15}},
+      yAxis:{type:'value',name:'元',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      series:[
+        {name:'容量收益',type:'bar',data:capRev,itemStyle:{color:COLORS.blue},barWidth:'70%',stack:'agc'},
+        {name:'里程收益',type:'bar',data:milRev,itemStyle:{color:COLORS.cyan},barWidth:'70%',stack:'agc'},
+      ]
+    });
+  })();
+
+  // 饼图
+  (function(){
+    const chart = initChart('p1-pie');
+    chart.setOption({
+      tooltip:{trigger:'item',formatter:'{b}: ¥{c} ({d}%)'},
+      legend:{orient:'vertical',left:10,top:'center',textStyle:{color:'#64748b',fontSize:11}},
+      series:[{
+        type:'pie',radius:['40%','70%'],center:['55%','45%'],
+        itemStyle:{borderRadius:4,borderColor:'#e2e8f0',borderWidth:2},
+        label:{show:true,formatter:'{b}\n¥{c}',color:'#64748b',fontSize:10},
+        data:[
+          {value:s.total_energy_revenue,name:'电能量套利',itemStyle:{color:COLORS.blue}},
+          {value:s.total_agc_capacity_revenue,name:'调频容量收益',itemStyle:{color:COLORS.green}},
+          {value:s.total_agc_mileage_revenue,name:'调频里程收益',itemStyle:{color:COLORS.cyan}},
+        ],
+      }]
+    });
+  })();
+
+  // 分时段收益分解图 (每小时采样, 24点)
+  (function(){
+    const chart = initChart('p1-decompose');
+    if (!chart) return;
+    // 每小时聚合 (4个15分钟时段 → 1小时)
+    const hourly = [];
+    for (let h = 0; h < 24; h++) {
+      let energy = 0, cap = 0, mil = 0, dev = 0, marketFee = 0, batt = 0, selfUse = 0, net = 0;
+      for (let j = 0; j < 4; j++) {
+        const r = intervals[h * 4 + j];
+        energy += r.energy_revenue;
+        cap += r.agc_capacity_revenue;
+        mil += r.agc_mileage_revenue;
+        dev += r.deviation_penalty;
+        marketFee += r.transmission_fee + r.gov_fund_fee + r.ancillary_fee;
+        batt += r.battery_degradation_cost;
+        selfUse += r.self_consumption_cost;
+        net += r.net_revenue;
+      }
+      hourly.push({h, energy, cap, mil, dev, marketFee, batt, selfUse, net});
+    }
+    const hourLabels = hourly.map(d => `${String(d.h).padStart(2,'0')}:00`);
+
+    chart.setOption({
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter: function(params) {
+          let html = `<b>${params[0].axisValue}</b><br/>`;
+          let totalRev = 0, totalCost = 0;
+          params.forEach(p => {
+            if (p.seriesName === '净收益') return;
+            const v = p.value || 0;
+            const color = v >= 0 ? '#16a34a' : '#dc2626';
+            html += `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:4px;"></span>`;
+            html += `${p.seriesName}: <b style="color:${color}">¥${v.toFixed(1)}</b><br/>`;
+            if (v >= 0) totalRev += v; else totalCost += Math.abs(v);
+          });
+          const netLine = params.find(p => p.seriesName === '净收益');
+          if (netLine) {
+            html += `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#feca57;margin-right:4px;"></span>`;
+            const nv = netLine.value;
+            html += `净收益: <b style="color:${nv>=0?'#16a34a':'#dc2626'}">¥${nv.toFixed(1)}</b>`;
+          }
+          return html;
+        }
+      },
+      legend: {
+        data: ['电能量套利','调频容量','调频里程','偏差考核','市场费用','电池衰减','辅助用电','净收益'],
+        textStyle: { color: '#64748b', fontSize: 11 },
+        top: 0,
+      },
+      grid: { left: 70, right: 40, top: 40, bottom: 30 },
+      xAxis: {
+        type: 'category', data: hourLabels,
+        axisLabel: { color: '#64748b', fontSize: 10, interval: 2 },
+      },
+      yAxis: {
+        type: 'value', name: '元',
+        nameTextStyle: { color: '#64748b' },
+        axisLabel: { color: '#64748b', formatter: v => (v/1000).toFixed(0)+'k' },
+        splitLine: { lineStyle: { color: '#e2e8f0' } },
+      },
+      series: [
+        // 收入堆叠 (正值)
+        { name: '电能量套利', type: 'bar', stack: 'revenue', data: hourly.map(d => +d.energy.toFixed(2)),
+          itemStyle: { color: COLORS.blue }, barWidth: '60%', emphasis: { focus: 'series' } },
+        { name: '调频容量', type: 'bar', stack: 'revenue', data: hourly.map(d => +d.cap.toFixed(2)),
+          itemStyle: { color: COLORS.green }, emphasis: { focus: 'series' } },
+        { name: '调频里程', type: 'bar', stack: 'revenue', data: hourly.map(d => +d.mil.toFixed(2)),
+          itemStyle: { color: COLORS.cyan }, emphasis: { focus: 'series' } },
+        // 支出堆叠 (负值)
+        { name: '偏差考核', type: 'bar', stack: 'cost', data: hourly.map(d => -Math.abs(d.dev).toFixed(2)),
+          itemStyle: { color: COLORS.orange }, emphasis: { focus: 'series' } },
+        { name: '市场费用', type: 'bar', stack: 'cost', data: hourly.map(d => -Math.abs(d.marketFee).toFixed(2)),
+          itemStyle: { color: COLORS.purple }, emphasis: { focus: 'series' } },
+        { name: '电池衰减', type: 'bar', stack: 'cost', data: hourly.map(d => -Math.abs(d.batt).toFixed(2)),
+          itemStyle: { color: COLORS.red }, emphasis: { focus: 'series' } },
+        { name: '辅助用电', type: 'bar', stack: 'cost', data: hourly.map(d => -Math.abs(d.selfUse).toFixed(2)),
+          itemStyle: { color: COLORS.gray }, emphasis: { focus: 'series' } },
+        // 净收益折线
+        { name: '净收益', type: 'line', data: hourly.map(d => +d.net.toFixed(2)),
+          lineStyle: { color: COLORS.yellow, width: 2.5 },
+          symbol: 'circle', symbolSize: 5,
+          itemStyle: { color: COLORS.yellow, borderColor: '#ffffff', borderWidth: 1 },
+          z: 10,
+        },
+      ],
+    });
+  })();
+
+  // 实时运行数据区域 (合并到收益看板底部) — 传入已计算的rtData, 避免两次随机导致数据不一致
+  renderRealTimePage('profit-content', { append: true, skipPowerSoc: true, skipSummary: true, rtData });
+}
+
+// ==================== Page 2: 日前中标情况 ====================
+function renderDayAheadPage() {
+  const da = ALL_DATA.dayAhead;
+  if (!da) {
+    document.getElementById('da-content').innerHTML = '<div class="error">日前市场数据未加载</div>';
+    return;
+  }
+  const intervals = da.intervals;
+  const times = intervals.map(d=>d.time);
+  const lmpData = intervals.map(d=>d.lmp_yuan_per_mwh);
+  const chargeData = intervals.map(d=>d.win_charge_mw);
+  const dischargeData = intervals.map(d=>d.win_discharge_mw);
+  // 直接从日前市场数据读取 AGC 容量、报价和 SOC 轨迹, 不再在前端仿真或重算
+  const adjAgcCap = intervals.map(d=>d.win_agc_capacity_mw);
+  const adjAgcPrice = intervals.map(d=>d.agc_capacity_price);
+  const socPathDa = intervals.map(d=>+(d.soc * 100).toFixed(2));
+
+  document.getElementById('da-content').innerHTML = `
+    <div class="card full-width">
+      <div class="card-title">📋 日前市场中标情况 — ${da.date} | 节点: ${da.node_name} | AGC里程价: ${da.agc_mileage_price} 元/MW</div>
+      <div class="summary-cards">
+        <div class="summary-item"><div class="label">日前LMP均价</div><div class="value neutral">${fmt(lmpData.reduce((a,b)=>a+b,0)/96,1)} 元/MWh</div></div>
+        <div class="summary-item"><div class="label">LMP最高/最低</div><div class="value neutral">${fmt(Math.max(...lmpData),1)} / ${fmt(Math.min(...lmpData),1)}</div></div>
+        <div class="summary-item"><div class="label">中标充电总量</div><div class="value positive">${fmt(chargeData.reduce((a,b)=>a+b,0)*0.25,0)} MWh</div></div>
+        <div class="summary-item"><div class="label">中标放电总量</div><div class="value positive">${fmt(dischargeData.reduce((a,b)=>a+b,0)*0.25,0)} MWh</div></div>
+        <div class="summary-item"><div class="label">AGC容量均价</div><div class="value neutral">${fmt(adjAgcPrice.reduce((a,b)=>a+b,0)/96,2)} 元/MW</div></div>
+        <div class="summary-item"><div class="label">AGC中标总容量</div><div class="value neutral">${fmt(adjAgcCap.reduce((a,b)=>a+b,0)*0.25,0)} MW·h</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">📈 日前LMP电价曲线</div><div class="chart" id="da-lmp"></div></div>
+    <div class="card full-width"><div class="card-title">🔌 中标充放电计划 & 🔋 SOC轨迹</div><div class="chart" id="da-power-soc" style="height:380px;"></div></div>
+    <div class="card"><div class="card-title">📡 AGC中标容量与报价</div><div class="chart" id="da-agc"></div></div>
+    <div class="card"><div class="card-title">💰 峰谷价差分析</div><div class="chart" id="da-spread"></div></div>
+    <div class="card full-width"><div class="card-title">📋 96点日前数据明细</div><div class="table-wrap" id="da-table"></div></div>
+  `;
+
+  // LMP曲线
+  (function(){
+    const chart = initChart('da-lmp');
+    chart.setOption({
+      tooltip:{trigger:'axis'},
+      grid:{left:60,right:30,top:20,bottom:20},
+      xAxis:{type:'category',data:times,axisLabel:{color:'#64748b',fontSize:10,interval:15}},
+      yAxis:{type:'value',name:'元/MWh',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      series:[{
+        name:'日前LMP',type:'line',data:lmpData,smooth:true,symbol:'none',
+        lineStyle:{color:COLORS.orange,width:2},
+        areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(243,156,18,0.35)'},{offset:1,color:'rgba(243,156,18,0.03)'}])},
+        markLine:{silent:true,symbol:'none',data:[
+          {yAxis:Math.min(...lmpData),label:{formatter:'最低: '+Math.min(...lmpData).toFixed(0),color:'#16a34a'},lineStyle:{color:'#16a34a',type:'dashed'}},
+          {yAxis:Math.max(...lmpData),label:{formatter:'最高: '+Math.max(...lmpData).toFixed(0),color:'#dc2626'},lineStyle:{color:'#dc2626',type:'dashed'}},
+        ]},
+      }]
+    });
+  })();
+
+  // 中标充放电计划 + SOC轨迹 (双轴合并)
+  (function(){
+    const chart = initChart('da-power-soc');
+    chart.setOption({
+      tooltip: {
+        trigger: 'axis',
+        formatter: function(params) {
+          let html = `<b>${params[0].axisValue}</b><br/>`;
+          params.forEach(p => {
+            if (p.seriesName === 'SOC') {
+              html += `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:4px;"></span>`;
+              html += `SOC: <b>${p.value}%</b><br/>`;
+            } else {
+              html += `<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${p.color};margin-right:4px;"></span>`;
+              html += `${p.seriesName}: <b>${p.value} MW</b><br/>`;
+            }
+          });
+          return html;
+        }
+      },
+      legend: { data: ['充电','放电','SOC'], textStyle: { color: '#64748b' }, bottom: 0 },
+      grid: { left: 70, right: 70, top: 20, bottom: 70 },
+      dataZoom: [
+        { type: 'slider', bottom: 10, height: 25, start: 0, end: 100,
+          textStyle: { color: '#64748b', fontSize: 10 }, fillerColor: 'rgba(84,160,255,0.15)',
+          borderColor: '#cbd5e1', backgroundColor: '#e2e8f0', handleStyle: { color: '#2563eb' } },
+        { type: 'inside', start: 0, end: 100 },
+      ],
+      xAxis: { type: 'category', data: times, axisLabel: { color: '#64748b', fontSize: 10, interval: 15 } },
+      yAxis: [
+        {
+          type: 'value', name: 'MW', nameTextStyle: { color: '#64748b' },
+          axisLabel: { color: '#64748b' }, splitLine: { lineStyle: { color: '#e2e8f0' } },
+        },
+        {
+          type: 'value', name: 'SOC(%)', min: 0, max: 100,
+          nameTextStyle: { color: '#64748b' }, axisLabel: { color: '#64748b', formatter: '{value}%' },
+          splitLine: { show: false },
+        },
+      ],
+      series: [
+        {
+          name: '充电', type: 'bar', data: chargeData.map(v => -v), yAxisIndex: 0,
+          itemStyle: { color: COLORS.green }, barWidth: '70%', barGap: '-100%',
+        },
+        {
+          name: '放电', type: 'bar', data: dischargeData, yAxisIndex: 0,
+          itemStyle: { color: COLORS.red }, barWidth: '70%', barGap: '-100%',
+        },
+        {
+          name: 'SOC', type: 'line', data: socPathDa, yAxisIndex: 1,
+          smooth: true, symbol: 'none',
+          lineStyle: { color: COLORS.yellow, width: 2.5 },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(254,202,87,0.4)' },
+              { offset: 1, color: 'rgba(254,202,87,0.03)' },
+            ]),
+          },
+          markLine: {
+            silent: true, symbol: 'none',
+            data: [
+              { yAxis: 10, label: { formatter: '下限10%', color: '#64748b' }, lineStyle: { color: COLORS.red, type: 'dashed' } },
+              { yAxis: 90, label: { formatter: '上限90%', color: '#64748b' }, lineStyle: { color: COLORS.orange, type: 'dashed' } },
+            ],
+          },
+        },
+      ],
+    });
+  })();
+
+  // AGC容量+报价
+  (function(){
+    const chart = initChart('da-agc');
+    chart.setOption({
+      tooltip:{trigger:'axis'},
+      legend:{data:['AGC容量','容量报价'],textStyle:{color:'#64748b'},bottom:0},
+      grid:{left:60,right:60,top:20,bottom:35},
+      xAxis:{type:'category',data:times,axisLabel:{color:'#64748b',fontSize:10,interval:15}},
+      yAxis:[
+        {type:'value',name:'MW',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+        {type:'value',name:'元/MW',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{show:false}},
+      ],
+      series:[
+        {name:'AGC容量',type:'bar',data:adjAgcCap,itemStyle:{color:COLORS.blue},barWidth:'70%'},
+        {name:'容量报价',type:'line',yAxisIndex:1,data:adjAgcPrice,smooth:true,symbol:'none',lineStyle:{color:COLORS.yellow,width:1.5}},
+      ]
+    });
+  })();
+
+  // 峰谷价差
+  (function(){
+    const chart = initChart('da-spread');
+    // 按小时聚合
+    const hourlyAvg=[];
+    for(let h=0;h<24;h++){
+      let sum=0;
+      for(let q=0;q<4;q++) sum+=lmpData[h*4+q];
+      hourlyAvg.push(sum/4);
+    }
+    const maxP=Math.max(...hourlyAvg), minP=Math.min(...hourlyAvg);
+    const hLabels=Array.from({length:24},(_,i)=>`${i}:00`);
+    chart.setOption({
+      tooltip:{trigger:'axis',formatter:p=>`<b>${p[0].axisValue}</b><br/>均价: ${p[0].value.toFixed(1)} 元/MWh<br/>峰谷差: ${(maxP-minP).toFixed(1)} 元/MWh`},
+      grid:{left:60,right:30,top:20,bottom:20},
+      xAxis:{type:'category',data:hLabels,axisLabel:{color:'#64748b',fontSize:10,interval:2}},
+      yAxis:{type:'value',name:'元/MWh',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      series:[{
+        type:'bar',data:hourlyAvg,
+        itemStyle:{color:function(p){return p.value===maxP?COLORS.red:p.value===minP?COLORS.green:COLORS.blue;}},
+        barWidth:'60%',
+        label:{show:true,position:'top',color:'#64748b',fontSize:9,formatter:p=>p.value===maxP||p.value===minP?p.value.toFixed(0):''},
+      }]
+    });
+  })();
+
+  // 表格
+  (function(){
+    const step=4;let html=`<table><thead><tr><th>时段</th><th>LMP(元/MWh)</th><th>充电(MW)</th><th>放电(MW)</th><th>AGC容量</th><th>AGC报价</th></tr></thead><tbody>`;
+    for(let i=0;i<96;i+=step){
+      const r=intervals[i];
+      html+=`<tr><td>${r.time}</td><td>${r.lmp_yuan_per_mwh.toFixed(1)}</td><td class="pos">${r.win_charge_mw.toFixed(1)}</td><td class="neg">${r.win_discharge_mw.toFixed(1)}</td><td>${adjAgcCap[i].toFixed(1)}</td><td>${adjAgcPrice[i].toFixed(2)}</td></tr>`;
+    }
+    html+='</tbody></table>';
+    document.getElementById('da-table').innerHTML=html;
+  })();
+}
+
+// 计算实时运行数据数组 (收益看板和实时看板共用)
+// 现在所有核心数据(rt_lmp/actual_charge/actual_discharge/actual_agc/soc)均已由Python后端生成,
+// 本函数仅做数据整理和日前-实时偏差计算, 不再做SOC仿真或随机扰动。
+function computeRealTimeData() {
+  const rt = ALL_DATA.realTime;
+  const da = ALL_DATA.dayAhead;
+  if (!rt) return null;
+  const intervals = rt.intervals;
+  const times = intervals.map(d=>d.time);
+
+  // 直接使用后端数据; actual_charge/discharge 已是套利+AGC的总功率
+  const rtLMP = intervals.map(d => +(d.rt_lmp_yuan_per_mwh).toFixed(2));
+  const chg = intervals.map(d => d.actual_charge_mw);
+  const dis = intervals.map(d => d.actual_discharge_mw);
+  const arbChg = intervals.map(d => d.arbitrage_charge_mw ?? 0);
+  const arbDis = intervals.map(d => d.arbitrage_discharge_mw ?? 0);
+  const agcChg = intervals.map(d => d.agc_charge_mw ?? 0);
+  const agcDis = intervals.map(d => d.agc_discharge_mw ?? 0);
+  const agc = intervals.map(d => d.actual_agc_mw);
+  const mileage = intervals.map(d => d.agc_mileage_mw);
+  const socPath = intervals.map(d => +(d.soc * 100).toFixed(2));
+
+  const daIntervals = da ? da.intervals : [];
+  const lmpDev = da ? times.map((_,i)=>rtLMP[i]-(daIntervals[i]?.lmp_yuan_per_mwh||rtLMP[i])) : [];
+  const chgDev = da ? times.map((_,i)=>chg[i]-(daIntervals[i]?.win_charge_mw||chg[i])) : [];
+  const disDev = da ? times.map((_,i)=>dis[i]-(daIntervals[i]?.win_discharge_mw||dis[i])) : [];
+  return { rt, intervals, times, rtLMP, chg, dis, arbChg, arbDis, agcChg, agcDis, agc, mileage, socPath, daIntervals, lmpDev, chgDev, disDev };
+}
+
+// ==================== Page 3: 实时运行数据 (已合并到收益看板, 保留为渲染辅助函数) ====================
+function renderRealTimePage(containerId='rt-content', opts={}) {
+  const { append=false, skipPowerSoc=false, skipSummary=false, rtData: precomputedRtData } = opts;
+  const rtData = precomputedRtData || computeRealTimeData();
+  if (!rtData) {
+    const msg = '<div class="error">实时数据未加载</div>';
+    if (append) document.getElementById(containerId).insertAdjacentHTML('beforeend', msg);
+    else document.getElementById(containerId).innerHTML = msg;
+    return;
+  }
+  const { rt, intervals, times, rtLMP, chg, dis, agc, mileage, daIntervals, lmpDev, chgDev, disDev } = rtData;
+
+  const html = `
+    ${skipSummary ? '' : `
+    <div class="card full-width">
+      <div class="card-title">📡 实时运行数据 — ${rt.date}</div>
+      <div class="summary-cards">
+        <div class="summary-item"><div class="label">实时LMP均价</div><div class="value neutral">${fmt(rtLMP.reduce((a,b)=>a+b,0)/96,1)} 元/MWh</div></div>
+        <div class="summary-item"><div class="label">实际充电总量</div><div class="value positive">${fmt(chg.reduce((a,b)=>a+b,0)*0.25,0)} MWh</div></div>
+        <div class="summary-item"><div class="label">实际放电总量</div><div class="value positive">${fmt(dis.reduce((a,b)=>a+b,0)*0.25,0)} MWh</div></div>
+        <div class="summary-item"><div class="label">AGC总里程</div><div class="value neutral">${fmt(mileage.reduce((a,b)=>a+b,0),0)} MW</div></div>
+        <div class="summary-item"><div class="label">日前vs实时LMP偏差</div><div class="value ${lmpDev.reduce((a,b)=>a+b,0)>0?'positive':'negative'}">${fmt(lmpDev.reduce((a,b)=>a+b,0)/96,1)} 元/MWh</div></div>
+        <div class="summary-item"><div class="label">AGC平均出力</div><div class="value neutral">${fmt(agc.reduce((a,b)=>a+b,0)/96,1)} MW</div></div>
+      </div>
+    </div>
+    `}
+    <div class="card"><div class="card-title">📈 日前 vs 实时LMP对比</div><div class="chart" id="rt-lmp"></div></div>
+    ${skipPowerSoc ? '' : `<div class="card full-width"><div class="card-title">🔌 实际充放电功率 & 🔋 SOC轨迹</div><div class="chart" id="rt-power-soc" style="height:380px;"></div></div>`}
+    <div class="card"><div class="card-title">📡 AGC实际出力与里程</div><div class="chart" id="rt-agc"></div></div>
+    <div class="card"><div class="card-title">⚠️ 偏差分析 (实时-日前)</div><div class="chart" id="rt-dev"></div></div>
+    <div class="card full-width"><div class="card-title">📋 96点实时数据明细</div><div class="table-wrap" id="rt-table"></div></div>
+  `;
+  const container = document.getElementById(containerId);
+  if (append) container.insertAdjacentHTML('beforeend', html);
+  else container.innerHTML = html;
+
+  // LMP对比
+  (function(){
+    const chart = initChart('rt-lmp');
+    const daLMP = daIntervals.map(d=>d?.lmp_yuan_per_mwh||null);
+    chart.setOption({
+      tooltip:{trigger:'axis'},
+      legend:{data:['实时LMP','日前LMP'],textStyle:{color:'#64748b'},bottom:0},
+      grid:{left:60,right:30,top:20,bottom:35},
+      xAxis:{type:'category',data:times,axisLabel:{color:'#64748b',fontSize:10,interval:15}},
+      yAxis:{type:'value',name:'元/MWh',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      series:[
+        {name:'实时LMP',type:'line',data:rtLMP,smooth:true,symbol:'none',lineStyle:{color:COLORS.blue,width:1.5}},
+        {name:'日前LMP',type:'line',data:daLMP,smooth:true,symbol:'none',lineStyle:{color:COLORS.orange,width:1,type:'dashed'}},
+      ]
+    });
+  })();
+
+  // 实际充放电功率 + SOC轨迹 (双轴合并)
+  if (!skipPowerSoc) {
+  (function(){
+    const chart = initChart('rt-power-soc');
+    // 使用 precomputed socPath (已含SOC约束仿真)
+    const socPath = rtData.socPath;
+    chart.setOption({
+      tooltip: {
+        trigger: 'axis',
+        formatter: function(params) {
+          let html = `<b>${params[0].axisValue}</b><br/>`;
+          params.forEach(p => {
+            if (p.seriesName === 'SOC') {
+              html += `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:4px;"></span>`;
+              html += `SOC: <b>${p.value}%</b><br/>`;
+            } else {
+              html += `<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${p.color};margin-right:4px;"></span>`;
+              html += `${p.seriesName}: <b>${p.value} MW</b><br/>`;
+            }
+          });
+          return html;
+        }
+      },
+      legend: { data: ['充电','放电','AGC指令','SOC'], textStyle: { color: '#64748b' }, bottom: 0 },
+      grid: { left: 70, right: 70, top: 20, bottom: 70 },
+      dataZoom: [
+        {
+          type: 'slider', bottom: 10, height: 25,
+          start: 0, end: 100,
+          textStyle: { color: '#64748b', fontSize: 10 },
+          fillerColor: 'rgba(84,160,255,0.15)',
+          borderColor: '#cbd5e1',
+          backgroundColor: '#e2e8f0',
+          handleStyle: { color: '#2563eb' },
+        },
+        {
+          type: 'inside', start: 0, end: 100,
+        },
+      ],
+      xAxis: { type: 'category', data: times, axisLabel: { color: '#64748b', fontSize: 10, interval: 15 } },
+      yAxis: [
+        {
+          type: 'value', name: 'MW', nameTextStyle: { color: '#64748b' },
+          axisLabel: { color: '#64748b' }, splitLine: { lineStyle: { color: '#e2e8f0' } },
+        },
+        {
+          type: 'value', name: 'SOC(%)', min: 0, max: 100,
+          nameTextStyle: { color: '#64748b' }, axisLabel: { color: '#64748b', formatter: '{value}%' },
+          splitLine: { show: false },
+        },
+      ],
+      series: [
+        {
+          name: '充电', type: 'bar', data: chg.map(v => -v), yAxisIndex: 0,
+          itemStyle: { color: COLORS.green }, barWidth: '70%', barGap: '-100%',
+        },
+        {
+          name: '放电', type: 'bar', data: dis, yAxisIndex: 0,
+          itemStyle: { color: COLORS.red }, barWidth: '70%', barGap: '-100%',
+        },
+        {
+          name: 'AGC指令', type: 'line', data: agc, yAxisIndex: 0,
+          smooth: true, symbol: 'none',
+          lineStyle: { color: COLORS.cyan, width: 1.5, type: 'dotted' },
+        },
+        {
+          name: 'SOC', type: 'line', data: socPath, yAxisIndex: 1,
+          smooth: true, symbol: 'none',
+          lineStyle: { color: COLORS.yellow, width: 2.5 },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(254,202,87,0.4)' },
+              { offset: 1, color: 'rgba(254,202,87,0.03)' },
+            ]),
+          },
+          markLine: {
+            silent: true, symbol: 'none',
+            data: [
+              { yAxis: 10, label: { formatter: '下限10%', color: '#64748b' }, lineStyle: { color: COLORS.red, type: 'dashed' } },
+              { yAxis: 90, label: { formatter: '上限90%', color: '#64748b' }, lineStyle: { color: COLORS.orange, type: 'dashed' } },
+            ],
+          },
+        },
+      ],
+    });
+  })();
+  }
+
+  // AGC
+  (function(){
+    const chart = initChart('rt-agc');
+    chart.setOption({
+      tooltip:{trigger:'axis'},
+      legend:{data:['AGC出力','调频里程'],textStyle:{color:'#64748b'},bottom:0},
+      grid:{left:60,right:60,top:20,bottom:35},
+      xAxis:{type:'category',data:times,axisLabel:{color:'#64748b',fontSize:10,interval:15}},
+      yAxis:[
+        {type:'value',name:'MW',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+        {type:'value',name:'MW',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{show:false}},
+      ],
+      series:[
+        {name:'AGC出力',type:'bar',data:agc,itemStyle:{color:COLORS.blue},barWidth:'70%'},
+        {name:'调频里程',type:'line',yAxisIndex:1,data:mileage,smooth:true,symbol:'none',lineStyle:{color:COLORS.cyan,width:2},areaStyle:{color:'rgba(0,210,211,0.15)'}},
+      ]
+    });
+  })();
+
+  // 偏差分析
+  (function(){
+    const chart = initChart('rt-dev');
+    chart.setOption({
+      tooltip:{trigger:'axis'},
+      legend:{data:['LMP偏差','充电偏差','放电偏差'],textStyle:{color:'#64748b'},bottom:0},
+      grid:{left:60,right:30,top:20,bottom:35},
+      xAxis:{type:'category',data:times,axisLabel:{color:'#64748b',fontSize:10,interval:15}},
+      yAxis:{type:'value',name:'偏差',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      series:[
+        {name:'LMP偏差',type:'line',data:lmpDev,smooth:true,symbol:'none',lineStyle:{color:COLORS.yellow,width:1.5}},
+        {name:'充电偏差',type:'bar',data:chgDev,itemStyle:{color:COLORS.green,opacity:0.6},barWidth:'70%'},
+        {name:'放电偏差',type:'bar',data:disDev,itemStyle:{color:COLORS.red,opacity:0.6},barWidth:'70%'},
+      ]
+    });
+  })();
+
+  // 表格
+  (function(){
+    const step=4;let html=`<table><thead><tr><th>时段</th><th>实时LMP</th><th>充电(MW)</th><th>放电(MW)</th><th>AGC出力</th><th>里程(MW)</th></tr></thead><tbody>`;
+    for(let i=0;i<96;i+=step){
+      html+=`<tr><td>${times[i]}</td><td>${rtLMP[i].toFixed(1)}</td><td class="pos">${chg[i].toFixed(1)}</td><td class="neg">${dis[i].toFixed(1)}</td><td>${agc[i].toFixed(1)}</td><td>${mileage[i].toFixed(2)}</td></tr>`;
+    }
+    html+='</tbody></table>';
+    document.getElementById('rt-table').innerHTML=html;
+  })();
+}
+
+// ==================== Page 4: 储能聚合模型 ====================
+function renderStoragePage() {
+  const sp = ALL_DATA.storage;
+  if (!sp) {
+    document.getElementById('sp-content').innerHTML = '<div class="error">储能参数未加载</div>';
+    return;
+  }
+
+  document.getElementById('sp-content').innerHTML = `
+    <div class="card full-width">
+      <div class="card-title">🔋 储能聚合模型参数 — ${sp.name}</div>
+      <div class="param-grid">
+        <div class="param-item"><span class="p-label">额定功率</span><span><span class="p-value">${sp.rated_power_mw}</span><span class="p-unit">MW</span></span></div>
+        <div class="param-item"><span class="p-label">额定容量</span><span><span class="p-value">${sp.rated_capacity_mwh}</span><span class="p-unit">MWh</span></span></div>
+        <div class="param-item"><span class="p-label">充电效率</span><span><span class="p-value">${fmtPct(sp.charging_efficiency)}</span></span></div>
+        <div class="param-item"><span class="p-label">放电效率</span><span><span class="p-value">${fmtPct(sp.discharging_efficiency)}</span></span></div>
+        <div class="param-item"><span class="p-label">SOC下限(硬)</span><span><span class="p-value">${fmtPct(sp.soc_min)}</span></span></div>
+        <div class="param-item"><span class="p-label">SOC上限(硬)</span><span><span class="p-value">${fmtPct(sp.soc_max)}</span></span></div>
+        <div class="param-item"><span class="p-label">AGC能量裕量</span><span><span class="p-value">${fmtPct(sp.agc_soc_reserve)}</span></span></div>
+        <div class="param-item"><span class="p-label">套利放电软下限</span><span><span class="p-value">${fmtPct(sp.soc_soft_min)}</span></span></div>
+        <div class="param-item"><span class="p-label">套利充电软上限</span><span><span class="p-value">${fmtPct(sp.soc_soft_max)}</span></span></div>
+        <div class="param-item"><span class="p-label">AGC功率裕量</span><span><span class="p-value">${sp.agc_reserve_mw}</span><span class="p-unit">MW</span></span></div>
+        <div class="param-item"><span class="p-label">AGC容量上限</span><span><span class="p-value">${sp.agc_max_capacity_mw}</span><span class="p-unit">MW</span></span></div>
+        <div class="param-item"><span class="p-label">爬坡速率</span><span><span class="p-value">${sp.ramp_rate_mw_per_min}</span><span class="p-unit">MW/min</span></span></div>
+        <div class="param-item"><span class="p-label">初始SOC</span><span><span class="p-value">${fmtPct(sp.initial_soc)}</span></span></div>
+        <div class="param-item"><span class="p-label">自放电率</span><span><span class="p-value">${(sp.self_discharge_rate*100).toFixed(2)}</span><span class="p-unit">%/h</span></span></div>
+        <div class="param-item"><span class="p-label">日循环次数</span><span><span class="p-value">${sp.cycles_per_day}</span><span class="p-unit">次/天</span></span></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">📐 功率-容量关系图</div><div class="chart" id="sp-pc"></div></div>
+    <div class="card"><div class="card-title">⏱️ 储能运行包络</div><div class="chart" id="sp-env"></div></div>
+    <div class="card full-width"><div class="card-title">📊 充放电循环效率分析</div><div class="chart" id="sp-eff" style="height:280px;"></div></div>
+    <div class="card full-width"><div class="card-title">📋 储能参数配置详情</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>参数名称</th><th>数值</th><th>单位</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>额定功率</td><td>${sp.rated_power_mw}</td><td>MW</td><td>最大充放电功率</td></tr>
+          <tr><td>额定容量</td><td>${sp.rated_capacity_mwh}</td><td>MWh</td><td>总储能容量</td></tr>
+          <tr><td>充放电时长</td><td>${(sp.rated_capacity_mwh/sp.rated_power_mw).toFixed(1)}</td><td>h</td><td>满功率充/放所需时间</td></tr>
+          <tr><td>充电效率</td><td>${fmtPct(sp.charging_efficiency)}</td><td>%</td><td>交流→直流转换效率</td></tr>
+          <tr><td>放电效率</td><td>${fmtPct(sp.discharging_efficiency)}</td><td>%</td><td>直流→交流转换效率</td></tr>
+          <tr><td>往返效率</td><td>${fmtPct(sp.charging_efficiency*sp.discharging_efficiency)}</td><td>%</td><td>充电→放电全循环效率</td></tr>
+          <tr><td>SOC范围(硬边界)</td><td>${fmtPct(sp.soc_min)} ~ ${fmtPct(sp.soc_max)}</td><td>%</td><td>物理可用SOC区间</td></tr>
+          <tr><td>AGC能量裕量</td><td>${fmtPct(sp.agc_soc_reserve)}</td><td>%</td><td>上下各预留给AGC的SOC裕量</td></tr>
+          <tr><td>套利放电软下限</td><td>${fmtPct(sp.soc_soft_min)}</td><td>%</td><td>低于此值常规放电暂停,仅响应AGC放电</td></tr>
+          <tr><td>套利充电软上限</td><td>${fmtPct(sp.soc_soft_max)}</td><td>%</td><td>高于此值常规充电暂停,仅响应AGC充电</td></tr>
+          <tr><td>AGC功率裕量</td><td>${sp.agc_reserve_mw}</td><td>MW</td><td>额定功率中预留的AGC上调/下调裕量</td></tr>
+          <tr><td>AGC容量上限</td><td>${sp.agc_max_capacity_mw}</td><td>MW</td><td>AGC中标容量上限,本场景固定10MW</td></tr>
+          <tr><td>可用容量</td><td>${(sp.rated_capacity_mwh*(sp.soc_max-sp.soc_min)).toFixed(1)}</td><td>MWh</td><td>实际可用储能容量(硬边界之间)</td></tr>
+          <tr><td>爬坡速率</td><td>${sp.ramp_rate_mw_per_min}</td><td>MW/min</td><td>功率变化最大速率</td></tr>
+          <tr><td>初始SOC</td><td>${fmtPct(sp.initial_soc)}</td><td>%</td><td>日初起始SOC</td></tr>
+          <tr><td>自放电率</td><td>${(sp.self_discharge_rate*100).toFixed(2)}</td><td>%/h</td><td>每小时自放电损耗</td></tr>
+          <tr><td>日循环次数</td><td>${sp.cycles_per_day}</td><td>次/天</td><td>每日充放电循环</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  `;
+
+  // 功率-容量关系图 (散点/气泡图)
+  (function(){
+    const chart = initChart('sp-pc');
+    const dur = sp.rated_capacity_mwh / sp.rated_power_mw;
+    chart.setOption({
+      tooltip:{trigger:'item',formatter:`额定功率: ${sp.rated_power_mw} MW<br>额定容量: ${sp.rated_capacity_mwh} MWh<br>时长: ${dur.toFixed(1)}h`},
+      grid:{left:60,right:30,top:20,bottom:20},
+      xAxis:{type:'value',name:'功率 (MW)',max:sp.rated_power_mw*1.5,nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      yAxis:{type:'value',name:'容量 (MWh)',max:sp.rated_capacity_mwh*1.5,nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      series:[{
+        type:'scatter',data:[[sp.rated_power_mw,sp.rated_capacity_mwh]],
+        symbolSize:60,itemStyle:{color:COLORS.green,shadowBlur:20,shadowColor:'rgba(46,204,113,0.5)'},
+        label:{show:true,formatter:`{b}`,position:'right',color:'#1e293b',fontSize:13},
+        markLine:{silent:true,symbol:'none',data:[
+          {xAxis:sp.rated_power_mw,label:{formatter:'额定功率',color:'#64748b',position:'start'},lineStyle:{color:COLORS.gray,type:'dashed'}},
+          {yAxis:sp.rated_capacity_mwh,label:{formatter:'额定容量',color:'#64748b',position:'start'},lineStyle:{color:COLORS.gray,type:'dashed'}},
+        ]},
+      }]
+    });
+  })();
+
+  // 运行包络
+  (function(){
+    const chart = initChart('sp-env');
+    const socMin=sp.soc_min, socMax=sp.soc_max, cap=sp.rated_capacity_mwh;
+    const xData=[], yUp=[], yLo=[];
+    for(let h=0;h<=24;h+=0.25){
+      xData.push(h.toFixed(2));
+      yUp.push(cap*socMax);
+      yLo.push(cap*socMin);
+    }
+    chart.setOption({
+      tooltip:{trigger:'axis'},
+      grid:{left:70,right:30,top:20,bottom:20},
+      xAxis:{type:'category',data:xData.map(h=>`${Math.floor(h)}:${(h%1*60).toFixed(0).padStart(2,'0')}`),axisLabel:{color:'#64748b',fontSize:10,interval:23},name:'时间',nameTextStyle:{color:'#64748b'}},
+      yAxis:{type:'value',name:'MWh',min:0,max:cap*1.05,nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      series:[
+        {name:'SOC上限',type:'line',data:Array(97).fill(cap*socMax),symbol:'none',lineStyle:{color:COLORS.orange,type:'dashed',width:1},areaStyle:{color:'rgba(243,156,18,0.1)'}},
+        {name:'SOC下限',type:'line',data:Array(97).fill(cap*socMin),symbol:'none',lineStyle:{color:COLORS.red,type:'dashed',width:1},areaStyle:{color:'rgba(231,76,60,0.05)'}},
+      ]
+    });
+  })();
+
+  // 效率分析桑基
+  (function(){
+    const chart = initChart('sp-eff');
+    chart.setOption({
+      tooltip:{trigger:'axis'},
+      grid:{left:60,right:30,top:20,bottom:25},
+      xAxis:{data:['充电输入','充电后存储','放电输出'],axisLabel:{color:'#64748b'},axisLine:{lineStyle:{color:'#cbd5e1'}}},
+      yAxis:{type:'value',name:'%',max:100,axisLabel:{color:'#64748b',formatter:'{value}%'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      series:[{
+        type:'bar',data:[
+          {value:100,itemStyle:{color:COLORS.blue}},
+          {value:sp.charging_efficiency*100,itemStyle:{color:COLORS.blue,opacity:0.7}},
+          {value:sp.charging_efficiency*sp.discharging_efficiency*100,itemStyle:{color:COLORS.green}},
+        ],
+        barWidth:'30%',
+        label:{show:true,position:'top',color:'#1e293b',fontSize:13,formatter:'{c}%'},
+      }]
+    });
+  })();
+}
+
+// ==================== Page 5: AGC与结算参数 ====================
+function renderParamsPage() {
+  const agc = ALL_DATA.agc;
+  const settle = ALL_DATA.settle;
+  if (!agc || !settle) {
+    document.getElementById('ap-content').innerHTML = '<div class="error">参数数据未加载</div>';
+    return;
+  }
+  const kp = agc.weight_k1*agc.k1_speed/agc.k1_base + agc.weight_k2*agc.k2_precision/agc.k2_base + agc.weight_k3*agc.k3_response/agc.k3_base;
+  const perfFactor = kp / agc.kp_avg;
+
+  document.getElementById('ap-content').innerHTML = `
+    <!-- AGC性能 -->
+    <div class="card full-width">
+      <div class="card-title">⚙️ AGC调频性能指标 — ${agc.date}</div>
+      <div class="summary-cards">
+        <div class="summary-item"><div class="label">K1 调节速率</div><div class="value neutral">${agc.k1_speed.toFixed(2)}</div><div class="sub">基准: ${agc.k1_base} | 权重: ${agc.weight_k1}</div></div>
+        <div class="summary-item"><div class="label">K2 调节精度</div><div class="value neutral">${agc.k2_precision.toFixed(2)}</div><div class="sub">基准: ${agc.k2_base} | 权重: ${agc.weight_k2}</div></div>
+        <div class="summary-item"><div class="label">K3 响应时间</div><div class="value neutral">${agc.k3_response.toFixed(2)}</div><div class="sub">基准: ${agc.k3_base} | 权重: ${agc.weight_k3}</div></div>
+        <div class="summary-item"><div class="label">综合Kp</div><div class="value ${kp>=1?'positive':'negative'}" style="font-size:26px;">${kp.toFixed(4)}</div><div class="sub">市场平均Kp: ${agc.kp_avg}</div></div>
+        <div class="summary-item"><div class="label">性能系数</div><div class="value ${perfFactor>=1?'positive':'negative'}">${perfFactor.toFixed(4)}</div><div class="sub">Kp/Kp_avg — 收益调节因子</div></div>
+        <div class="summary-item"><div class="label">Kp贡献分解</div><div class="value neutral">K1:${(agc.weight_k1*agc.k1_speed/agc.k1_base).toFixed(3)} K2:${(agc.weight_k2*agc.k2_precision/agc.k2_base).toFixed(3)} K3:${(agc.weight_k3*agc.k3_response/agc.k3_base).toFixed(3)}</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">🎯 AGC性能雷达图</div><div class="chart" id="ap-radar"></div></div>
+    <div class="card"><div class="card-title">📊 Kp贡献分解</div><div class="chart" id="ap-kpbar"></div></div>
+
+    <!-- 结算参数 -->
+    <div class="card full-width">
+      <div class="card-title">💰 结算参数配置</div>
+      <div class="param-grid">
+        <div class="param-item"><span class="p-label">偏差免考核范围</span><span><span class="p-value">${fmtPct(settle.deviation_tolerance)}</span></span></div>
+        <div class="param-item"><span class="p-label">偏差惩罚系数</span><span><span class="p-value">${fmtPct(settle.deviation_penalty_rate)}</span></span></div>
+        <div class="param-item"><span class="p-label">输配电价比例</span><span><span class="p-value">${fmtPct(settle.transmission_fee_rate)}</span></span></div>
+        <div class="param-item"><span class="p-label">政府基金及附加</span><span><span class="p-value">${fmtPct(settle.gov_fund_rate)}</span></span></div>
+        <div class="param-item"><span class="p-label">辅助服务分摊比例</span><span><span class="p-value">${fmtPct(settle.ancillary_cost_rate)}</span></span></div>
+        <div class="param-item"><span class="p-label">AGC不合格罚款</span><span><span class="p-value">${settle.agc_unqualified_penalty}</span><span class="p-unit">元/次</span></span></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">📊 费用构成占比</div><div class="chart" id="ap-fees"></div></div>
+    <div class="card"><div class="card-title">📋 结算参数与规则说明</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>参数</th><th>数值</th><th>规则依据</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>偏差免考核范围</td><td>${fmtPct(settle.deviation_tolerance)}</td><td>PDF 14.7节</td><td>实际与计划偏差在此范围内免于考核</td></tr>
+          <tr><td>偏差惩罚系数</td><td>${fmtPct(settle.deviation_penalty_rate)}</td><td>PDF 14.7节</td><td>超出免考核范围的偏差按此系数罚款</td></tr>
+          <tr><td>输配电价</td><td>${fmtPct(settle.transmission_fee_rate)}</td><td>PDF 14.6节</td><td>按充放电电量绝对值计收</td></tr>
+          <tr><td>政府基金</td><td>${fmtPct(settle.gov_fund_rate)}</td><td>PDF 14.6节</td><td>可再生能源基金等政府性基金</td></tr>
+          <tr><td>辅助服务分摊</td><td>${fmtPct(settle.ancillary_cost_rate)}</td><td>PDF 14.8节</td><td>AGC辅助服务成本分摊</td></tr>
+          <tr><td>AGC不合格罚款</td><td>${settle.agc_unqualified_penalty} 元/次</td><td>PDF 14.8节</td><td>K3<0.9基准时视为不合格</td></tr>
+          <tr><td>Kp权重</td><td>K1:${agc.weight_k1} K2:${agc.weight_k2} K3:${agc.weight_k3}</td><td>PDF 第349页</td><td>综合性能指标加权系数</td></tr>
+          <tr><td style="background:#1e2d3d;font-weight:bold;" colspan="4">🔧 运行成本参数</td></tr>
+          <tr><td>电池衰减成本</td><td>${settle.battery_degradation_per_mwh.toFixed(0)} 元/MWh</td><td>行业参考</td><td>按充放电吞吐量每MWh计收</td></tr>
+          <tr><td>辅助用电比例</td><td>${fmtPct(settle.self_consumption_rate)}</td><td>行业参考</td><td>空调/PCS/BMS自用电占充电量比例</td></tr>
+          <tr><td>日运维固定费</td><td>${settle.daily_om_cost_yuan.toFixed(0)} 元/天</td><td>行业参考</td><td>含人工巡检日常维护等固定支出</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  `;
+
+  // 雷达图
+  (function(){
+    const chart = initChart('ap-radar');
+    chart.setOption({
+      tooltip:{},
+      legend:{data:['本机组','市场平均'],textStyle:{color:'#64748b'},bottom:0},
+      radar:{
+        center:['50%','50%'],radius:'65%',
+        indicator:[
+          {name:'K1\n调节速率',max:1.5},{name:'K2\n调节精度',max:1.5},
+          {name:'K3\n响应时间',max:1.5},{name:'Kp\n综合性能',max:1.5},
+        ],
+        axisName:{color:'#64748b',fontSize:11},
+        splitArea:{areaStyle:{color:['#e2e8f0','#1e2d3d','#e2e8f0','#1e2d3d','#e2e8f0']}},
+      },
+      series:[{
+        type:'radar',
+        data:[
+          {value:[agc.k1_speed/agc.k1_base,agc.k2_precision/agc.k2_base,agc.k3_response/agc.k3_base,kp],name:'本机组',
+           areaStyle:{color:'rgba(46,204,113,0.3)'},lineStyle:{color:COLORS.green,width:2},itemStyle:{color:COLORS.green}},
+          {value:[1,1,1,agc.kp_avg],name:'市场平均',
+           areaStyle:{color:'rgba(84,160,255,0.15)'},lineStyle:{color:COLORS.blue,width:1.5,type:'dashed'},itemStyle:{color:COLORS.blue}},
+        ]
+      }]
+    });
+  })();
+
+  // Kp贡献柱状图
+  (function(){
+    const chart = initChart('ap-kpbar');
+    chart.setOption({
+      tooltip:{trigger:'axis'},
+      grid:{left:80,right:30,top:20,bottom:25},
+      yAxis:{type:'category',data:['K1 速率','K2 精度','K3 响应','Kp 总计'],axisLabel:{color:'#64748b'},axisLine:{lineStyle:{color:'#cbd5e1'}}},
+      xAxis:{type:'value',name:'得分',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      series:[{
+        type:'bar',
+        data:[
+          {value:agc.weight_k1*agc.k1_speed/agc.k1_base,itemStyle:{color:COLORS.green}},
+          {value:agc.weight_k2*agc.k2_precision/agc.k2_base,itemStyle:{color:COLORS.blue}},
+          {value:agc.weight_k3*agc.k3_response/agc.k3_base,itemStyle:{color:COLORS.orange}},
+          {value:kp,itemStyle:{color:kp>=1?COLORS.green:COLORS.red}},
+        ],
+        barWidth:'50%',
+        label:{show:true,position:'right',color:'#1e293b',fontSize:12,formatter:'{c}'},
+      }]
+    });
+  })();
+
+  // 费用构成
+  (function(){
+    const chart = initChart('ap-fees');
+    chart.setOption({
+      tooltip:{trigger:'item',formatter:'{b}: {c} ({d}%)'},
+      legend:{orient:'vertical',left:10,top:'center',textStyle:{color:'#64748b',fontSize:10}},
+      series:[{
+        type:'pie',radius:['40%','70%'],center:['55%','45%'],
+        itemStyle:{borderRadius:4,borderColor:'#e2e8f0',borderWidth:2},
+        label:{show:true,formatter:'{b}\n{d}%',color:'#64748b',fontSize:10},
+        data:[
+          {value:settle.transmission_fee_rate,name:'输配电价',itemStyle:{color:COLORS.blue}},
+          {value:settle.gov_fund_rate,name:'政府基金',itemStyle:{color:COLORS.orange}},
+          {value:settle.ancillary_cost_rate,name:'辅助服务分摊',itemStyle:{color:COLORS.purple}},
+          {value:settle.deviation_tolerance,name:'偏差免考核',itemStyle:{color:COLORS.green}},
+          {value:settle.deviation_penalty_rate,name:'偏差惩罚系数',itemStyle:{color:COLORS.red}},
+          {value:settle.battery_degradation_per_mwh/1000,name:'电池衰减(~)',itemStyle:{color:COLORS.yellow}},
+          {value:settle.self_consumption_rate,name:'辅助用电比例',itemStyle:{color:COLORS.cyan}},
+          {value:settle.daily_om_cost_yuan/10000,name:'日运维(万分之一)',itemStyle:{color:COLORS.orange}},
+        ],
+      }]
+    });
+  })();
+}
+
+// ===== 更新Header =====
+function updateHeader() {
+  if (ALL_DATA.daily) {
+    const s = ALL_DATA.daily.summary;
+    document.getElementById('info-date').textContent = ALL_DATA.daily.date;
+    document.getElementById('info-node').textContent = ALL_DATA.daily.node_name;
+    document.getElementById('info-storage').textContent = ALL_DATA.daily.storage_name;
+    document.getElementById('info-kp').textContent = s.kp.toFixed(4);
+    document.getElementById('net-profit-big').textContent = '¥' + fmt(s.net_profit, 2);
+    document.getElementById('date-profit-preview').innerHTML =
+      s.net_profit >= 0
+        ? `<span class="pos">当日净收益: ¥${fmt(s.net_profit)}</span>`
+        : `<span class="neg">当日净收益: -¥${fmt(Math.abs(s.net_profit))}</span>`;
+  } else if (ALL_DATA.storage) {
+    document.getElementById('info-storage').textContent = ALL_DATA.storage.name;
+  }
+}
+
+// ===== 切换日期 =====
+async function switchDate(dateStr) {
+  if (dateStr === currentDate) return;
+  disposeCharts();
+  document.getElementById('profit-content').innerHTML = '<div class="loading">⏳ 加载中...</div>';
+  await loadDateData(dateStr);
+  updateHeader();
+  // 重绘当前页面
+  switchPage(currentPage);
+}
+
+// ===== 主流程 =====
+(async function main() {
+  // 加载共享数据
+  await loadSharedData();
+
+  // 初始化日期选择器
+  const sel = document.getElementById('date-selector');
+  AVAILABLE_DATES.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = d;
+    sel.appendChild(opt);
+  });
+  // 默认选最新日期
+  const defaultDate = AVAILABLE_DATES[AVAILABLE_DATES.length - 1];
+  sel.value = defaultDate;
+  sel.addEventListener('change', () => switchDate(sel.value));
+
+  // 加载默认日期数据
+  await loadDateData(defaultDate);
+  updateHeader();
+  renderProfitPage();
+
+  // Tab切换事件
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const pageId = btn.dataset.page;
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      currentPage = pageId;
+      disposeCharts();
+      switchPage(pageId);
+    });
+  });
+})();
+</script>
+</body>
+</html>

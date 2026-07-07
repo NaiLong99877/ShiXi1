@@ -1,0 +1,13 @@
+{
+  "date": "2026-06-30",
+  "k1_speed": 1.15,
+  "k1_base": 1.0,
+  "k2_precision": 1.08,
+  "k2_base": 1.0,
+  "k3_response": 0.95,
+  "k3_base": 1.0,
+  "weight_k1": 0.35,
+  "weight_k2": 0.4,
+  "weight_k3": 0.25,
+  "kp_avg": 1.05
+}
