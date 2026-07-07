@@ -843,7 +843,7 @@
     {
       "time": "23:15",
       "lmp_yuan_per_mwh": 309.7,
-      "win_charge_mw": 97.3913,
+      "win_charge_mw": 0.0,
       "win_discharge_mw": 0.0,
       "win_agc_capacity_mw": 30.0,
       "agc_capacity_price": 9.68,
@@ -852,20 +852,20 @@
     {
       "time": "23:30",
       "lmp_yuan_per_mwh": 314.51,
-      "win_charge_mw": 67.8261,
+      "win_charge_mw": 0.0,
       "win_discharge_mw": 0.0,
       "win_agc_capacity_mw": 30.0,
-      "agc_capacity_price": 9.44,
-      "soc": 0.2905
+      "agc_capacity_price": 10.19,
+      "soc": 0.1785
     },
     {
       "time": "23:45",
       "lmp_yuan_per_mwh": 309.96,
-      "win_charge_mw": 85.2174,
+      "win_charge_mw": 0.0,
       "win_discharge_mw": 0.0,
       "win_agc_capacity_mw": 30.0,
-      "agc_capacity_price": 9.42,
-      "soc": 0.3682
+      "agc_capacity_price": 10.77,
+      "soc": 0.1782
     }
   ]
 }

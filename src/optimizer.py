@@ -71,6 +71,7 @@ def _dp_core(
     max_charge_power: Optional[float] = None,
     max_discharge_power: Optional[float] = None,
     self_discharge_mwh: float = 0.0,
+    final_soc_penalty: float = 0.0,
 ) -> Tuple[List[float], float]:
     """
     DP核心引擎 — 在离散SOC空间上最大化累计利润
@@ -86,6 +87,8 @@ def _dp_core(
 
     其他:
       - self_discharge_mwh: 每时段自放电量 (DC 侧 MWh), 默认 0
+      - final_soc_penalty: 终端 SOC 偏离惩罚系数 (≥0),
+        当 final_soc_target 非 None 时生效, 用于防止 SOC 漂到极端
 
     Returns:
         powers:     每时段功率 (MW, 正=放电, 负=充电), 长度n_intervals
@@ -171,13 +174,23 @@ def _dp_core(
     # ---- 选择最优终态 ----
     if final_soc_target is not None:
         target_s = _state_from_soc(final_soc_target, storage, N)
-        window = 5
-        candidates = range(max(0, target_s - window),
-                          min(N, target_s + window + 1))
+        if final_soc_penalty > 0:
+            # 软终端惩罚: 评估所有状态, 按偏离目标 SOC 的程度扣减利润
+            def _score(s):
+                profit = dp[T][s][0]
+                if profit <= NEG_INF / 2:
+                    return NEG_INF
+                deviation = abs(soc_of[s] - final_soc_target)
+                return profit - final_soc_penalty * deviation ** 2
+            best_s = max(range(N), key=_score)
+        else:
+            window = 5
+            candidates = range(max(0, target_s - window),
+                              min(N, target_s + window + 1))
+            best_s = max(candidates, key=lambda s: dp[T][s][0])
     else:
-        candidates = range(N)
+        best_s = max(range(N), key=lambda s: dp[T][s][0])
 
-    best_s = max(candidates, key=lambda s: dp[T][s][0])
     best_profit = dp[T][best_s][0]
 
     if best_profit <= NEG_INF / 2:
@@ -254,6 +267,7 @@ def optimize_day_ahead(
     agc_mileage_price: float,
     initial_soc: float,
     final_soc_target: Optional[float] = None,
+    final_soc_penalty: float = 50000.0,
     agc_reserve_mw: Optional[float] = None,
     agc_max_capacity_mw: Optional[float] = None,
     n_states: int = 401,
@@ -279,7 +293,8 @@ def optimize_day_ahead(
         agc_prices:    AGC容量报价 (96点, 元/MW)
         agc_mileage_price: AGC里程价格 (元/MW)
         initial_soc:   初始SOC
-        final_soc_target: 日末SOC目标
+        final_soc_target: 日末SOC目标 (默认取 storage.initial_soc)
+        final_soc_penalty: 终端 SOC 偏离惩罚系数, 防止跨日 SOC 漂移到极端
         agc_reserve_mw: AGC功率裕量 (默认取 storage.agc_reserve_mw)
         agc_max_capacity_mw: AGC容量上限 (默认取 storage.agc_max_capacity_mw)
 
@@ -340,6 +355,7 @@ def optimize_day_ahead(
         max_charge_power=energy_power_limit,
         max_discharge_power=energy_power_limit,
         self_discharge_mwh=self_discharge_mwh,
+        final_soc_penalty=final_soc_penalty,
     )
 
     # 拆分正负功率 & 计算AGC容量
