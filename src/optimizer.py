@@ -657,7 +657,7 @@ def optimize_real_time_mpc(
     initial_soc: float,
     final_soc_target: Optional[float] = None,
     agc_reserve_mw: Optional[float] = None,
-    horizon: int = 24,
+    horizon: int = 48,
     n_states: int = 401,
     lmp_bias_decay: float = 0.8,
     agc_forecast_mode: str = "zero",
@@ -676,7 +676,7 @@ def optimize_real_time_mpc(
 
     Args:
         da_soc: 日前优化得到的 SOC 轨迹 (96点), 用作各窗口终端目标
-        horizon: 预测优化窗口长度 (默认 24 个 15 分钟时段 = 6 小时)
+        horizon: 预测优化窗口长度 (默认 48 个 15 分钟时段 = 12 小时)
         lmp_bias_decay: 实时 LMP 偏差衰减系数
         agc_forecast_mode: "zero" | "persistence" | "expected"
 

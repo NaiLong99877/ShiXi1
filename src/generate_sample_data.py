@@ -393,8 +393,8 @@ if __name__ == "__main__":
         help="禁用滚动 MPC, 使用全局 hindsight 优化生成实时调度",
     )
     parser.add_argument(
-        "--horizon", type=int, default=24,
-        help="MPC 预测窗口长度 (默认 24, 即 6 小时)",
+        "--horizon", type=int, default=48,
+        help="MPC 预测窗口长度 (默认 48, 即 12 小时)",
     )
     args = parser.parse_args()
     main(use_mpc=not args.no_mpc, mpc_horizon=args.horizon)
