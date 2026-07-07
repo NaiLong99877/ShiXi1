@@ -15,7 +15,8 @@ body {
 /* ===== Header ===== */
 .header {
   background: #ffffff;
-  padding: 16px 30px; border-bottom: 1px solid #e2e8f0;
+  padding: 16px 30px;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.25);
   display: flex; justify-content: space-between; align-items: center;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
@@ -27,20 +28,23 @@ body {
 .date-bar {
   display: flex; align-items: center; gap: 10px;
   padding: 8px 30px; background: #ffffff;
-  border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #64748b;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.2);
+  font-size: 13px; color: #64748b;
 }
 .date-bar select {
-  padding: 4px 12px; border-radius: 6px; border: 1px solid #cbd5e1;
+  padding: 4px 12px; border-radius: 6px;
+  border: 1px solid rgba(37, 99, 235, 0.35);
   background: #ffffff; color: #1e293b; font-size: 13px; font-family: inherit;
   cursor: pointer; min-width: 140px;
 }
-.date-bar select:focus { outline: none; border-color: #2563eb; }
+.date-bar select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 8px rgba(37,99,235,0.15); }
 #date-profit-preview .pos { color: #16a34a; }
 #date-profit-preview .neg { color: #dc2626; }
 
 /* ===== Tab Navigation ===== */
 .tab-nav {
-  display: flex; background: #ffffff; border-bottom: 1px solid #e2e8f0;
+  display: flex; background: #ffffff;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.2);
   padding: 0 16px; gap: 2px; overflow-x: auto;
 }
 .tab-btn {
@@ -59,14 +63,15 @@ body {
 
 .card {
   background: #ffffff; border-radius: 12px;
-  border: 1px solid #e2e8f0; padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 0 0 1px rgba(37,99,235,0.04);
 }
 .card.full-width { grid-column: 1 / -1; }
 .card-title {
   font-size: 15px; font-weight: 600; color: #1e293b;
   margin-bottom: 12px; padding-bottom: 8px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.2);
   display: flex; align-items: center; gap: 8px;
 }
 .chart { width: 100%; height: 320px; }
@@ -75,7 +80,8 @@ body {
 .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .summary-item {
   background: #f8fafc;
-  border: 1px solid #e2e8f0; border-radius: 10px;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: 10px;
   padding: 12px; text-align: center;
 }
 .summary-item .label { font-size: 11px; color: #64748b; margin-bottom: 4px; }
@@ -89,6 +95,7 @@ body {
 .param-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .param-item {
   background: #f8fafc; border-radius: 8px; padding: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.15);
   display: flex; justify-content: space-between; align-items: center;
 }
 .param-item .p-label { font-size: 13px; color: #64748b; }
@@ -101,7 +108,7 @@ body {
 .table-wrap th {
   background: #f8fafc; color: #2563eb; padding: 7px 5px;
   position: sticky; top: 0; z-index: 1;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid rgba(37, 99, 235, 0.25);
 }
 .table-wrap td { padding: 4px 5px; border-bottom: 1px solid #f1f5f9; text-align: right; }
 .table-wrap td:first-child { text-align: center; color: #64748b; }
@@ -372,78 +379,49 @@ function renderProfitPage() {
     <div class="card full-width"><div class="card-title">📊 分时段收益分解 (每小时)</div><div class="chart" id="p1-decompose" style="height:400px;"></div></div>
   `;
 
-  // LMP K线图 + 买卖点
+  // LMP曲线图
   (function(){
     const chart = initChart('p1-lmp');
     const lmpVals = intervals.map(d=>d.lmp);
-    const ohlc=[], buyPts=[], sellPts=[];
-    for (let i=0;i<96;i++) {
-      // 收盘价 = 真实LMP价格
-      const close = lmpVals[i];
-      // 前15分钟收盘价 (第一个时段用自身)
-      const prevClose = i>0 ? lmpVals[i-1] : lmpVals[0];
-      // 开盘价 = (收盘价 + 前15分钟收盘价) / 2 + 随机偏移, 取整
-      const avgPrice = (close + prevClose) / 2;
-      const shift = Math.round((Math.random() - 0.5) * 40);
-      const open = Math.round(avgPrice + shift);
-      // 实体范围
-      const bodyHi = Math.max(open, close);
-      const bodyLo = Math.min(open, close);
-      // 高 = max(收,开) + 随机偏移(取整);  低 = min(收,开) - 随机偏移(取整)
-      const wickUp   = Math.round(Math.random() * 20 + 2);
-      const wickDown = Math.round(Math.random() * 20 + 2);
-      ohlc.push([open, close, Math.round(bodyLo - wickDown), Math.round(bodyHi + wickUp)]);
-      if (intervals[i].net_power_mw<0) buyPts.push({i, pwr:Math.abs(intervals[i].net_power_mw)});
-      if (intervals[i].net_power_mw>0) sellPts.push({i, pwr:intervals[i].net_power_mw});
-    }
-    buyPts.sort((a,b)=>b.pwr-a.pwr); sellPts.sort((a,b)=>b.pwr-a.pwr);
-    const bMarkers = buyPts.slice(0,6).map(d=>({coord:[d.i,ohlc[d.i][2]],symbolOffset:[0,'30%'],symbolRotate:180}));
-    const sMarkers = sellPts.slice(0,6).map(d=>({coord:[d.i,ohlc[d.i][3]],symbolOffset:[0,'-30%']}));
 
     chart.setOption({
       tooltip:{trigger:'axis',formatter:function(ps){
         const p=ps[0]; if(!p) return'';
-        const idx=p.dataIndex ?? 0;     // 当前数据索引
-        const d=ohlc[idx];              // [open, close, low, high]
-        if(!d) return'';
-        // 涨跌幅 = 本15分钟收盘价 相对 前15分钟收盘价
-        const prevClose = idx>0 ? lmpVals[idx-1] : lmpVals[0];
-        const chgPct = prevClose ? ((d[1] - prevClose) / prevClose * 100) : 0;
+        const idx=p.dataIndex ?? 0;
+        const val = lmpVals[idx];
+        const prevVal = idx>0 ? lmpVals[idx-1] : lmpVals[0];
+        const chgPct = prevVal ? ((val - prevVal) / prevVal * 100) : 0;
         const chgStr = (chgPct>=0 ? '+' : '') + chgPct.toFixed(2)+'%';
         const chgColor = chgPct>=0 ? '#dc2626' : '#16a34a';
         return `<b>${times[idx]}</b><br/>` +
-               `开 ${d[0]}  收 ${Math.round(d[1])}<br/>` +
-               `高 ${d[3]}  低 ${d[2]}<br/>` +
+               `LMP: <b>${Math.round(val)}</b> 元/MWh<br/>` +
                `涨跌 <b style="color:${chgColor}">${chgStr}</b>`;
       }},
-      legend:{data:['K线'],textStyle:{color:'#64748b'},bottom:0},
+      legend:{data:['LMP'],textStyle:{color:'#64748b'},bottom:0},
       grid:{left:60,right:30,top:40,bottom:70},
       dataZoom:[
         {type:'slider',bottom:10,height:25,start:0,end:100,
          textStyle:{color:'#64748b',fontSize:10},fillerColor:'rgba(84,160,255,0.15)',
-         borderColor:'#cbd5e1',backgroundColor:'#e2e8f0',handleStyle:{color:'#2563eb'}},
+         borderColor:'rgba(37,99,235,0.3)',backgroundColor:'rgba(37,99,235,0.08)',handleStyle:{color:'#2563eb'}},
         {type:'inside',start:0,end:100},
       ],
       xAxis:{type:'category',data:times,axisLabel:{color:'#64748b',fontSize:10,interval:15}},
-      yAxis:{type:'value',name:'元/MWh',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      yAxis:{type:'value',name:'元/MWh',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'rgba(37,99,235,0.12)'}}},
       series:[
-        {name:'K线',type:'candlestick',data:ohlc,
-         // 阳线(收>=开):红底红框; 阴线(收<开):绿底绿框
-         itemStyle:{color:'transparent',color0:COLORS.green,borderColor:COLORS.red,borderColor0:COLORS.green,borderWidth:1.5},
-         barWidth:'78%',
-         markPoint:{symbol:'pin',symbolSize:15,label:{fontSize:7,fontWeight:'bold',color:'#fff',position:'inside'},
-           data:[
-             ...sMarkers.map(d=>({...d,itemStyle:{color:COLORS.green},label:{formatter:'S'}})),
-             ...bMarkers.map(d=>({...d,itemStyle:{color:COLORS.red},label:{formatter:'B',offset:[0,3]}})),
-           ]
-         }},
+        {name:'LMP',type:'line',data:lmpVals,
+         smooth:true,symbol:'none',lineStyle:{width:2},
+         areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[
+           {offset:0,color:'rgba(37,99,235,0.3)'},
+           {offset:1,color:'rgba(37,99,235,0.02)'}
+         ])},
+        },
       ],
     });
     chart.on('datazoom',function(){
       const o=chart.getOption(),ds=o.dataZoom[0];
       const s=ds.startValue??0,e=ds.endValue??95;
       let mn=Infinity,mx=-Infinity;
-      for(let i=s;i<=e;i++){const d=ohlc[i];if(!d)continue;if(d[2]<mn)mn=d[2];if(d[3]>mx)mx=d[3];}
+      for(let i=s;i<=e;i++){const v=lmpVals[i];if(v==null)continue;if(v<mn)mn=v;if(v>mx)mx=v;}
       if(mn<mx) chart.setOption({yAxis:{min:Math.round(mn*0.98),max:Math.round(mx*1.02)}});
     });
     chart.dispatchAction({type:'dataZoom',start:0,end:100});
@@ -548,7 +526,7 @@ function renderProfitPage() {
       legend:{data:['容量收益','里程收益'],textStyle:{color:'#64748b'},bottom:0},
       grid:{left:70,right:20,top:20,bottom:35},
       xAxis:{type:'category',data:times,axisLabel:{color:'#64748b',fontSize:10,interval:15}},
-      yAxis:{type:'value',name:'元',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      yAxis:{type:'value',name:'元',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'rgba(37,99,235,0.12)'}}},
       series:[
         {name:'容量收益',type:'bar',data:capRev,itemStyle:{color:COLORS.blue},barWidth:'70%',stack:'agc'},
         {name:'里程收益',type:'bar',data:milRev,itemStyle:{color:COLORS.cyan},barWidth:'70%',stack:'agc'},
@@ -564,7 +542,7 @@ function renderProfitPage() {
       legend:{orient:'vertical',left:10,top:'center',textStyle:{color:'#64748b',fontSize:11}},
       series:[{
         type:'pie',radius:['40%','70%'],center:['55%','45%'],
-        itemStyle:{borderRadius:4,borderColor:'#e2e8f0',borderWidth:2},
+        itemStyle:{borderRadius:4,borderColor:'rgba(37,99,235,0.2)',borderWidth:2},
         label:{show:true,formatter:'{b}\n¥{c}',color:'#64748b',fontSize:10},
         data:[
           {value:s.total_energy_revenue,name:'电能量套利',itemStyle:{color:COLORS.blue}},
@@ -713,7 +691,7 @@ function renderDayAheadPage() {
       tooltip:{trigger:'axis'},
       grid:{left:60,right:30,top:20,bottom:20},
       xAxis:{type:'category',data:times,axisLabel:{color:'#64748b',fontSize:10,interval:15}},
-      yAxis:{type:'value',name:'元/MWh',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      yAxis:{type:'value',name:'元/MWh',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'rgba(37,99,235,0.12)'}}},
       series:[{
         name:'日前LMP',type:'line',data:lmpData,smooth:true,symbol:'none',
         lineStyle:{color:COLORS.orange,width:2},
@@ -806,7 +784,7 @@ function renderDayAheadPage() {
       grid:{left:60,right:60,top:20,bottom:35},
       xAxis:{type:'category',data:times,axisLabel:{color:'#64748b',fontSize:10,interval:15}},
       yAxis:[
-        {type:'value',name:'MW',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+        {type:'value',name:'MW',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'rgba(37,99,235,0.12)'}}},
         {type:'value',name:'元/MW',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{show:false}},
       ],
       series:[
@@ -832,7 +810,7 @@ function renderDayAheadPage() {
       tooltip:{trigger:'axis',formatter:p=>`<b>${p[0].axisValue}</b><br/>均价: ${p[0].value.toFixed(1)} 元/MWh<br/>峰谷差: ${(maxP-minP).toFixed(1)} 元/MWh`},
       grid:{left:60,right:30,top:20,bottom:20},
       xAxis:{type:'category',data:hLabels,axisLabel:{color:'#64748b',fontSize:10,interval:2}},
-      yAxis:{type:'value',name:'元/MWh',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      yAxis:{type:'value',name:'元/MWh',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'rgba(37,99,235,0.12)'}}},
       series:[{
         type:'bar',data:hourlyAvg,
         itemStyle:{color:function(p){return p.value===maxP?COLORS.red:p.value===minP?COLORS.green:COLORS.blue;}},
@@ -928,7 +906,7 @@ function renderRealTimePage(containerId='rt-content', opts={}) {
       legend:{data:['实时LMP','日前LMP'],textStyle:{color:'#64748b'},bottom:0},
       grid:{left:60,right:30,top:20,bottom:35},
       xAxis:{type:'category',data:times,axisLabel:{color:'#64748b',fontSize:10,interval:15}},
-      yAxis:{type:'value',name:'元/MWh',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      yAxis:{type:'value',name:'元/MWh',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'rgba(37,99,235,0.12)'}}},
       series:[
         {name:'实时LMP',type:'line',data:rtLMP,smooth:true,symbol:'none',lineStyle:{color:COLORS.blue,width:1.5}},
         {name:'日前LMP',type:'line',data:daLMP,smooth:true,symbol:'none',lineStyle:{color:COLORS.orange,width:1,type:'dashed'}},
@@ -1033,7 +1011,7 @@ function renderRealTimePage(containerId='rt-content', opts={}) {
       grid:{left:60,right:60,top:20,bottom:35},
       xAxis:{type:'category',data:times,axisLabel:{color:'#64748b',fontSize:10,interval:15}},
       yAxis:[
-        {type:'value',name:'MW',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+        {type:'value',name:'MW',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'rgba(37,99,235,0.12)'}}},
         {type:'value',name:'MW',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{show:false}},
       ],
       series:[
@@ -1051,7 +1029,7 @@ function renderRealTimePage(containerId='rt-content', opts={}) {
       legend:{data:['LMP偏差','充电偏差','放电偏差'],textStyle:{color:'#64748b'},bottom:0},
       grid:{left:60,right:30,top:20,bottom:35},
       xAxis:{type:'category',data:times,axisLabel:{color:'#64748b',fontSize:10,interval:15}},
-      yAxis:{type:'value',name:'偏差',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      yAxis:{type:'value',name:'偏差',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'rgba(37,99,235,0.12)'}}},
       series:[
         {name:'LMP偏差',type:'line',data:lmpDev,smooth:true,symbol:'none',lineStyle:{color:COLORS.yellow,width:1.5}},
         {name:'充电偏差',type:'bar',data:chgDev,itemStyle:{color:COLORS.green,opacity:0.6},barWidth:'70%'},
@@ -1136,8 +1114,8 @@ function renderStoragePage() {
     chart.setOption({
       tooltip:{trigger:'item',formatter:`额定功率: ${sp.rated_power_mw} MW<br>额定容量: ${sp.rated_capacity_mwh} MWh<br>时长: ${dur.toFixed(1)}h`},
       grid:{left:60,right:30,top:20,bottom:20},
-      xAxis:{type:'value',name:'功率 (MW)',max:sp.rated_power_mw*1.5,nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
-      yAxis:{type:'value',name:'容量 (MWh)',max:sp.rated_capacity_mwh*1.5,nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      xAxis:{type:'value',name:'功率 (MW)',max:sp.rated_power_mw*1.5,nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'rgba(37,99,235,0.12)'}}},
+      yAxis:{type:'value',name:'容量 (MWh)',max:sp.rated_capacity_mwh*1.5,nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'rgba(37,99,235,0.12)'}}},
       series:[{
         type:'scatter',data:[[sp.rated_power_mw,sp.rated_capacity_mwh]],
         symbolSize:60,itemStyle:{color:COLORS.green,shadowBlur:20,shadowColor:'rgba(46,204,113,0.5)'},
@@ -1164,7 +1142,7 @@ function renderStoragePage() {
       tooltip:{trigger:'axis'},
       grid:{left:70,right:30,top:20,bottom:20},
       xAxis:{type:'category',data:xData.map(h=>`${Math.floor(h)}:${(h%1*60).toFixed(0).padStart(2,'0')}`),axisLabel:{color:'#64748b',fontSize:10,interval:23},name:'时间',nameTextStyle:{color:'#64748b'}},
-      yAxis:{type:'value',name:'MWh',min:0,max:cap*1.05,nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      yAxis:{type:'value',name:'MWh',min:0,max:cap*1.05,nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'rgba(37,99,235,0.12)'}}},
       series:[
         {name:'SOC上限',type:'line',data:Array(97).fill(cap*socMax),symbol:'none',lineStyle:{color:COLORS.orange,type:'dashed',width:1},areaStyle:{color:'rgba(243,156,18,0.1)'}},
         {name:'SOC下限',type:'line',data:Array(97).fill(cap*socMin),symbol:'none',lineStyle:{color:COLORS.red,type:'dashed',width:1},areaStyle:{color:'rgba(231,76,60,0.05)'}},
@@ -1179,7 +1157,7 @@ function renderStoragePage() {
       tooltip:{trigger:'axis'},
       grid:{left:60,right:30,top:20,bottom:25},
       xAxis:{data:['充电输入','充电后存储','放电输出'],axisLabel:{color:'#64748b'},axisLine:{lineStyle:{color:'#cbd5e1'}}},
-      yAxis:{type:'value',name:'%',max:100,axisLabel:{color:'#64748b',formatter:'{value}%'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      yAxis:{type:'value',name:'%',max:100,axisLabel:{color:'#64748b',formatter:'{value}%'},splitLine:{lineStyle:{color:'rgba(37,99,235,0.12)'}}},
       series:[{
         type:'bar',data:[
           {value:100,itemStyle:{color:COLORS.blue}},
@@ -1287,7 +1265,7 @@ function renderParamsPage() {
       tooltip:{trigger:'axis'},
       grid:{left:80,right:30,top:20,bottom:25},
       yAxis:{type:'category',data:['K1 速率','K2 精度','K3 响应','Kp 总计'],axisLabel:{color:'#64748b'},axisLine:{lineStyle:{color:'#cbd5e1'}}},
-      xAxis:{type:'value',name:'得分',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'#e2e8f0'}}},
+      xAxis:{type:'value',name:'得分',nameTextStyle:{color:'#64748b'},axisLabel:{color:'#64748b'},splitLine:{lineStyle:{color:'rgba(37,99,235,0.12)'}}},
       series:[{
         type:'bar',
         data:[
@@ -1310,7 +1288,7 @@ function renderParamsPage() {
       legend:{orient:'vertical',left:10,top:'center',textStyle:{color:'#64748b',fontSize:10}},
       series:[{
         type:'pie',radius:['40%','70%'],center:['55%','45%'],
-        itemStyle:{borderRadius:4,borderColor:'#e2e8f0',borderWidth:2},
+        itemStyle:{borderRadius:4,borderColor:'rgba(37,99,235,0.2)',borderWidth:2},
         label:{show:true,formatter:'{b}\n{d}%',color:'#64748b',fontSize:10},
         data:[
           {value:settle.transmission_fee_rate,name:'输配电价',itemStyle:{color:COLORS.blue}},

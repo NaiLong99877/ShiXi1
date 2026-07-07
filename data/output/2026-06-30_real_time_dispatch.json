@@ -12,7 +12,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.3252
+      "soc": 0.1999
     },
     {
       "time": "00:15",
@@ -25,7 +25,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.3249
+      "soc": 0.1997
     },
     {
       "time": "00:30",
@@ -38,7 +38,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.3247
+      "soc": 0.1994
     },
     {
       "time": "00:45",
@@ -51,7 +51,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.3244
+      "soc": 0.1992
     },
     {
       "time": "01:00",
@@ -64,7 +64,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.3242
+      "soc": 0.1989
     },
     {
       "time": "01:15",
@@ -77,7 +77,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.3239
+      "soc": 0.1987
     },
     {
       "time": "01:30",
@@ -90,7 +90,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.3237
+      "soc": 0.1984
     },
     {
       "time": "01:45",
@@ -103,7 +103,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": -1.01,
       "agc_mileage_mw": 1.01,
-      "soc": 0.3246
+      "soc": 0.1994
     },
     {
       "time": "02:00",
@@ -116,46 +116,46 @@
       "agc_discharge_mw": 11.44,
       "actual_agc_mw": 11.44,
       "agc_mileage_mw": 11.44,
-      "soc": 0.3088
+      "soc": 0.1836
     },
     {
       "time": "02:15",
       "rt_lmp_yuan_per_mwh": 238.72,
-      "actual_charge_mw": 67.8261,
+      "actual_charge_mw": 0.0,
       "actual_discharge_mw": 0.0,
-      "arbitrage_charge_mw": 67.8261,
+      "arbitrage_charge_mw": 0.0,
       "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.3865
+      "soc": 0.1833
     },
     {
       "time": "02:30",
       "rt_lmp_yuan_per_mwh": 231.03,
-      "actual_charge_mw": 67.8261,
+      "actual_charge_mw": 0.0,
       "actual_discharge_mw": 0.0,
-      "arbitrage_charge_mw": 67.8261,
+      "arbitrage_charge_mw": 0.0,
       "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.4643
+      "soc": 0.1831
     },
     {
       "time": "02:45",
       "rt_lmp_yuan_per_mwh": 233.15,
-      "actual_charge_mw": 67.8261,
+      "actual_charge_mw": 0.0,
       "actual_discharge_mw": 0.0,
-      "arbitrage_charge_mw": 67.8261,
+      "arbitrage_charge_mw": 0.0,
       "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.542
+      "soc": 0.1828
     },
     {
       "time": "03:00",
@@ -168,33 +168,33 @@
       "agc_discharge_mw": 6.71,
       "actual_agc_mw": 6.71,
       "agc_mileage_mw": 6.71,
-      "soc": 0.5327
+      "soc": 0.1735
     },
     {
       "time": "03:15",
       "rt_lmp_yuan_per_mwh": 247.99,
-      "actual_charge_mw": 5.2174,
+      "actual_charge_mw": 0.0,
       "actual_discharge_mw": 0.0,
-      "arbitrage_charge_mw": 5.2174,
+      "arbitrage_charge_mw": 0.0,
       "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.5384
+      "soc": 0.1732
     },
     {
       "time": "03:30",
       "rt_lmp_yuan_per_mwh": 236.5,
-      "actual_charge_mw": 67.8261,
+      "actual_charge_mw": 0.0,
       "actual_discharge_mw": 0.0,
-      "arbitrage_charge_mw": 67.8261,
+      "arbitrage_charge_mw": 0.0,
       "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6162
+      "soc": 0.173
     },
     {
       "time": "03:45",
@@ -207,7 +207,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6159
+      "soc": 0.1727
     },
     {
       "time": "04:00",
@@ -220,7 +220,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6157
+      "soc": 0.1725
     },
     {
       "time": "04:15",
@@ -233,7 +233,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6154
+      "soc": 0.1722
     },
     {
       "time": "04:30",
@@ -246,7 +246,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6152
+      "soc": 0.172
     },
     {
       "time": "04:45",
@@ -259,7 +259,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6149
+      "soc": 0.1717
     },
     {
       "time": "05:00",
@@ -272,7 +272,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6147
+      "soc": 0.1715
     },
     {
       "time": "05:15",
@@ -285,7 +285,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6144
+      "soc": 0.1712
     },
     {
       "time": "05:30",
@@ -298,7 +298,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6142
+      "soc": 0.171
     },
     {
       "time": "05:45",
@@ -311,7 +311,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6139
+      "soc": 0.1707
     },
     {
       "time": "06:00",
@@ -324,7 +324,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": -14.49,
       "agc_mileage_mw": 14.49,
-      "soc": 0.6303
+      "soc": 0.1871
     },
     {
       "time": "06:15",
@@ -337,7 +337,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6301
+      "soc": 0.1869
     },
     {
       "time": "06:30",
@@ -350,7 +350,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6298
+      "soc": 0.1866
     },
     {
       "time": "06:45",
@@ -363,7 +363,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6296
+      "soc": 0.1864
     },
     {
       "time": "07:00",
@@ -376,7 +376,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6293
+      "soc": 0.1861
     },
     {
       "time": "07:15",
@@ -389,7 +389,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6291
+      "soc": 0.1859
     },
     {
       "time": "07:30",
@@ -402,7 +402,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6288
+      "soc": 0.1856
     },
     {
       "time": "07:45",
@@ -415,59 +415,59 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6286
+      "soc": 0.1854
     },
     {
       "time": "08:00",
       "rt_lmp_yuan_per_mwh": 463.93,
       "actual_charge_mw": 0.0,
-      "actual_discharge_mw": 69.184,
+      "actual_discharge_mw": 0.0,
       "arbitrage_charge_mw": 0.0,
-      "arbitrage_discharge_mw": 69.184,
+      "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.5343
+      "soc": 0.1851
     },
     {
       "time": "08:15",
       "rt_lmp_yuan_per_mwh": 482.8,
       "actual_charge_mw": 0.0,
-      "actual_discharge_mw": 67.712,
+      "actual_discharge_mw": 0.0,
       "arbitrage_charge_mw": 0.0,
-      "arbitrage_discharge_mw": 67.712,
+      "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.4421
+      "soc": 0.1849
     },
     {
       "time": "08:30",
       "rt_lmp_yuan_per_mwh": 478.8,
       "actual_charge_mw": 0.0,
-      "actual_discharge_mw": 67.712,
+      "actual_discharge_mw": 0.0,
       "arbitrage_charge_mw": 0.0,
-      "arbitrage_discharge_mw": 67.712,
+      "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.3498
+      "soc": 0.1846
     },
     {
       "time": "08:45",
       "rt_lmp_yuan_per_mwh": 468.6,
       "actual_charge_mw": 0.0,
-      "actual_discharge_mw": 69.184,
+      "actual_discharge_mw": 0.0,
       "arbitrage_charge_mw": 0.0,
-      "arbitrage_discharge_mw": 69.184,
+      "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2556
+      "soc": 0.1844
     },
     {
       "time": "09:00",
@@ -480,20 +480,20 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": -8.05,
       "agc_mileage_mw": 8.05,
-      "soc": 0.2646
+      "soc": 0.1934
     },
     {
       "time": "09:15",
       "rt_lmp_yuan_per_mwh": 451.01,
       "actual_charge_mw": 0.0,
-      "actual_discharge_mw": 42.688,
+      "actual_discharge_mw": 0.0,
       "arbitrage_charge_mw": 0.0,
-      "arbitrage_discharge_mw": 42.688,
+      "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2063
+      "soc": 0.1931
     },
     {
       "time": "09:30",
@@ -506,7 +506,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2061
+      "soc": 0.1929
     },
     {
       "time": "09:45",
@@ -519,7 +519,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2058
+      "soc": 0.1926
     },
     {
       "time": "10:00",
@@ -532,7 +532,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2056
+      "soc": 0.1924
     },
     {
       "time": "10:15",
@@ -545,7 +545,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2053
+      "soc": 0.1921
     },
     {
       "time": "10:30",
@@ -558,7 +558,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2051
+      "soc": 0.1919
     },
     {
       "time": "10:45",
@@ -571,7 +571,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2048
+      "soc": 0.1916
     },
     {
       "time": "11:00",
@@ -584,7 +584,7 @@
       "agc_discharge_mw": 8.98,
       "actual_agc_mw": 8.98,
       "agc_mileage_mw": 8.98,
-      "soc": 0.1924
+      "soc": 0.1792
     },
     {
       "time": "11:15",
@@ -597,7 +597,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.1921
+      "soc": 0.1789
     },
     {
       "time": "11:30",
@@ -610,98 +610,98 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.1919
+      "soc": 0.1787
     },
     {
       "time": "11:45",
       "rt_lmp_yuan_per_mwh": 275.12,
-      "actual_charge_mw": 45.2174,
+      "actual_charge_mw": 0.0,
       "actual_discharge_mw": 0.0,
-      "arbitrage_charge_mw": 45.2174,
+      "arbitrage_charge_mw": 0.0,
       "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2436
+      "soc": 0.1784
     },
     {
       "time": "12:00",
       "rt_lmp_yuan_per_mwh": 269.81,
-      "actual_charge_mw": 67.8261,
+      "actual_charge_mw": 0.0,
       "actual_discharge_mw": 0.0,
-      "arbitrage_charge_mw": 67.8261,
+      "arbitrage_charge_mw": 0.0,
       "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.3214
+      "soc": 0.1782
     },
     {
       "time": "12:15",
       "rt_lmp_yuan_per_mwh": 272.37,
-      "actual_charge_mw": 67.8261,
+      "actual_charge_mw": 0.0,
       "actual_discharge_mw": 0.0,
-      "arbitrage_charge_mw": 67.8261,
+      "arbitrage_charge_mw": 0.0,
       "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.3991
+      "soc": 0.1779
     },
     {
       "time": "12:30",
       "rt_lmp_yuan_per_mwh": 264.94,
-      "actual_charge_mw": 67.8261,
+      "actual_charge_mw": 0.0,
       "actual_discharge_mw": 0.0,
-      "arbitrage_charge_mw": 67.8261,
+      "arbitrage_charge_mw": 0.0,
       "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.4769
+      "soc": 0.1777
     },
     {
       "time": "12:45",
       "rt_lmp_yuan_per_mwh": 258.84,
-      "actual_charge_mw": 67.8261,
+      "actual_charge_mw": 0.0,
       "actual_discharge_mw": 0.0,
-      "arbitrage_charge_mw": 67.8261,
+      "arbitrage_charge_mw": 0.0,
       "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.5546
+      "soc": 0.1774
     },
     {
       "time": "13:00",
       "rt_lmp_yuan_per_mwh": 265.97,
-      "actual_charge_mw": 67.8261,
+      "actual_charge_mw": 0.0,
       "actual_discharge_mw": 0.0,
-      "arbitrage_charge_mw": 67.8261,
+      "arbitrage_charge_mw": 0.0,
       "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6324
+      "soc": 0.1772
     },
     {
       "time": "13:15",
       "rt_lmp_yuan_per_mwh": 274.6,
-      "actual_charge_mw": 67.8261,
+      "actual_charge_mw": 0.0,
       "actual_discharge_mw": 0.0,
-      "arbitrage_charge_mw": 67.8261,
+      "arbitrage_charge_mw": 0.0,
       "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7101
+      "soc": 0.1769
     },
     {
       "time": "13:30",
@@ -714,20 +714,20 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7099
+      "soc": 0.1767
     },
     {
       "time": "13:45",
       "rt_lmp_yuan_per_mwh": 273.76,
-      "actual_charge_mw": 67.8261,
+      "actual_charge_mw": 0.0,
       "actual_discharge_mw": 0.0,
-      "arbitrage_charge_mw": 67.8261,
+      "arbitrage_charge_mw": 0.0,
       "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7876
+      "soc": 0.1764
     },
     {
       "time": "14:00",
@@ -740,7 +740,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7874
+      "soc": 0.1762
     },
     {
       "time": "14:15",
@@ -753,7 +753,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7871
+      "soc": 0.1759
     },
     {
       "time": "14:30",
@@ -766,7 +766,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7869
+      "soc": 0.1757
     },
     {
       "time": "14:45",
@@ -779,7 +779,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7866
+      "soc": 0.1754
     },
     {
       "time": "15:00",
@@ -792,7 +792,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7864
+      "soc": 0.1752
     },
     {
       "time": "15:15",
@@ -805,7 +805,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7861
+      "soc": 0.1749
     },
     {
       "time": "15:30",
@@ -818,7 +818,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7859
+      "soc": 0.1747
     },
     {
       "time": "15:45",
@@ -831,7 +831,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": -4.96,
       "agc_mileage_mw": 4.96,
-      "soc": 0.7913
+      "soc": 0.1801
     },
     {
       "time": "16:00",
@@ -844,7 +844,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7911
+      "soc": 0.1799
     },
     {
       "time": "16:15",
@@ -857,7 +857,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7908
+      "soc": 0.1796
     },
     {
       "time": "16:30",
@@ -870,7 +870,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7906
+      "soc": 0.1794
     },
     {
       "time": "16:45",
@@ -883,7 +883,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7903
+      "soc": 0.1791
     },
     {
       "time": "17:00",
@@ -896,7 +896,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7901
+      "soc": 0.1789
     },
     {
       "time": "17:15",
@@ -909,7 +909,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7898
+      "soc": 0.1786
     },
     {
       "time": "17:30",
@@ -922,7 +922,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7896
+      "soc": 0.1784
     },
     {
       "time": "17:45",
@@ -935,7 +935,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7893
+      "soc": 0.1781
     },
     {
       "time": "18:00",
@@ -948,98 +948,98 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7891
+      "soc": 0.1779
     },
     {
       "time": "18:15",
       "rt_lmp_yuan_per_mwh": 493.26,
       "actual_charge_mw": 0.0,
-      "actual_discharge_mw": 19.136,
+      "actual_discharge_mw": 0.0,
       "arbitrage_charge_mw": 0.0,
-      "arbitrage_discharge_mw": 19.136,
+      "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.7628
+      "soc": 0.1776
     },
     {
       "time": "18:30",
       "rt_lmp_yuan_per_mwh": 500.98,
       "actual_charge_mw": 0.0,
-      "actual_discharge_mw": 67.712,
+      "actual_discharge_mw": 0.0,
       "arbitrage_charge_mw": 0.0,
-      "arbitrage_discharge_mw": 67.712,
+      "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.6706
+      "soc": 0.1774
     },
     {
       "time": "18:45",
       "rt_lmp_yuan_per_mwh": 523.33,
       "actual_charge_mw": 0.0,
-      "actual_discharge_mw": 69.184,
+      "actual_discharge_mw": 0.0,
       "arbitrage_charge_mw": 0.0,
-      "arbitrage_discharge_mw": 69.184,
+      "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.5763
+      "soc": 0.1771
     },
     {
       "time": "19:00",
       "rt_lmp_yuan_per_mwh": 518.21,
       "actual_charge_mw": 0.0,
-      "actual_discharge_mw": 69.184,
+      "actual_discharge_mw": 0.0,
       "arbitrage_charge_mw": 0.0,
-      "arbitrage_discharge_mw": 69.184,
+      "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.4821
+      "soc": 0.1769
     },
     {
       "time": "19:15",
       "rt_lmp_yuan_per_mwh": 517.86,
       "actual_charge_mw": 0.0,
-      "actual_discharge_mw": 69.184,
+      "actual_discharge_mw": 0.0,
       "arbitrage_charge_mw": 0.0,
-      "arbitrage_discharge_mw": 69.184,
+      "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.3878
+      "soc": 0.1766
     },
     {
       "time": "19:30",
       "rt_lmp_yuan_per_mwh": 511.39,
       "actual_charge_mw": 0.0,
-      "actual_discharge_mw": 67.712,
+      "actual_discharge_mw": 0.0,
       "arbitrage_charge_mw": 0.0,
-      "arbitrage_discharge_mw": 67.712,
+      "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2956
+      "soc": 0.1764
     },
     {
       "time": "19:45",
       "rt_lmp_yuan_per_mwh": 493.68,
       "actual_charge_mw": 0.0,
-      "actual_discharge_mw": 33.856,
+      "actual_discharge_mw": 0.0,
       "arbitrage_charge_mw": 0.0,
-      "arbitrage_discharge_mw": 33.856,
+      "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2493
+      "soc": 0.1761
     },
     {
       "time": "20:00",
@@ -1052,7 +1052,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2491
+      "soc": 0.1759
     },
     {
       "time": "20:15",
@@ -1065,7 +1065,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": -6.08,
       "agc_mileage_mw": 6.08,
-      "soc": 0.2558
+      "soc": 0.1826
     },
     {
       "time": "20:30",
@@ -1078,7 +1078,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2556
+      "soc": 0.1824
     },
     {
       "time": "20:45",
@@ -1091,7 +1091,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2553
+      "soc": 0.1821
     },
     {
       "time": "21:00",
@@ -1104,7 +1104,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": -14.78,
       "agc_mileage_mw": 14.78,
-      "soc": 0.2721
+      "soc": 0.1989
     },
     {
       "time": "21:15",
@@ -1117,7 +1117,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2718
+      "soc": 0.1986
     },
     {
       "time": "21:30",
@@ -1130,7 +1130,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": -3.05,
       "agc_mileage_mw": 3.05,
-      "soc": 0.2751
+      "soc": 0.2019
     },
     {
       "time": "21:45",
@@ -1143,7 +1143,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2748
+      "soc": 0.2016
     },
     {
       "time": "22:00",
@@ -1156,7 +1156,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2746
+      "soc": 0.2014
     },
     {
       "time": "22:15",
@@ -1169,7 +1169,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2743
+      "soc": 0.2011
     },
     {
       "time": "22:30",
@@ -1182,7 +1182,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2741
+      "soc": 0.2009
     },
     {
       "time": "22:45",
@@ -1195,7 +1195,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2738
+      "soc": 0.2006
     },
     {
       "time": "23:00",
@@ -1208,7 +1208,7 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2736
+      "soc": 0.2004
     },
     {
       "time": "23:15",
@@ -1221,20 +1221,20 @@
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.2733
+      "soc": 0.2001
     },
     {
       "time": "23:30",
       "rt_lmp_yuan_per_mwh": 305.08,
-      "actual_charge_mw": 29.5652,
+      "actual_charge_mw": 0.0,
       "actual_discharge_mw": 0.0,
-      "arbitrage_charge_mw": 29.5652,
+      "arbitrage_charge_mw": 0.0,
       "arbitrage_discharge_mw": 0.0,
       "agc_charge_mw": 0.0,
       "agc_discharge_mw": 0.0,
       "actual_agc_mw": 0.0,
       "agc_mileage_mw": 0.0,
-      "soc": 0.3071
+      "soc": 0.1999
     },
     {
       "time": "23:45",
@@ -1247,7 +1247,7 @@
       "agc_discharge_mw": 9.06,
       "actual_agc_mw": 9.06,
       "agc_mileage_mw": 9.06,
-      "soc": 0.2945
+      "soc": 0.1873
     }
   ]
 }

@@ -368,6 +368,7 @@ def optimize_day_ahead(
 # 实时调度 (两段式: AGC指令优先 + AGC=0时段在计划内优化)
 # ============================================================
 
+
 def optimize_real_time(
     storage: StorageParams,
     da_charge: List[float],
@@ -635,4 +636,146 @@ def optimize_real_time(
         arbitrage_charge, arbitrage_discharge,
         agc_charge, agc_discharge,
         actual_agc, agc_mileages, final_soc,
+    )
+
+
+# ============================================================
+# 滚动 MPC 实时调度
+# ============================================================
+
+def optimize_real_time_mpc(
+    storage: StorageParams,
+    da_charge: List[float],
+    da_discharge: List[float],
+    da_agc_cap: List[float],
+    da_lmp: List[float],
+    rt_lmp: List[float],
+    agc_commands: List[float],
+    agc_mileage_price: float,
+    settlement: SettlementParams,
+    initial_soc: float,
+    final_soc_target: Optional[float] = None,
+    agc_reserve_mw: Optional[float] = None,
+    horizon: int = 8,
+    n_states: int = 401,
+    lmp_bias_decay: float = 0.8,
+    agc_forecast_mode: str = "zero",
+) -> Tuple[List[float], List[float], List[float], List[float], List[float], List[float], List[float], List[float], float]:
+    """
+    滚动 MPC 实时调度。
+
+    每个时刻 t 只利用当前已观测信息, 预测未来 H 个时段, 优化后仅执行第一个时段的套利决策。
+
+    信息集 (时刻 t 已知):
+      - 当前 SOC
+      - rt_lmp[0:t]   (已观测实时 LMP)
+      - agc_commands[0:t] (已观测 AGC 指令)
+      - da_lmp[t:], da_charge[t:], da_discharge[t:] (日前计划作为预测基线)
+
+    预测方法:
+      - LMP: 日前基线 + 最新观测偏差按 lmp_bias_decay 衰减
+      - AGC: 默认保守地预测为 0 (mode="zero")
+
+    Args:
+        horizon: 预测优化窗口长度 (默认 8 个 15 分钟时段 = 2 小时)
+        lmp_bias_decay: 实时 LMP 偏差衰减系数
+        agc_forecast_mode: "zero" | "persistence" | "expected"
+
+    Returns:
+        与 optimize_real_time 相同的 9 元组
+    """
+    from forecaster import Forecaster  # 局部导入, 避免循环依赖
+
+    T = len(rt_lmp)
+    if T != len(da_lmp):
+        raise ValueError("rt_lmp 与 da_lmp 长度必须相同")
+
+    forecaster = Forecaster(
+        da_lmp=da_lmp,
+        da_agc_cap=da_agc_cap,
+        lmp_bias_decay=lmp_bias_decay,
+    )
+
+    # 初始化输出序列
+    actual_charge = [0.0] * T
+    actual_discharge = [0.0] * T
+    arbitrage_charge = [0.0] * T
+    arbitrage_discharge = [0.0] * T
+    agc_charge = [0.0] * T
+    agc_discharge = [0.0] * T
+    actual_agc = [0.0] * T
+    agc_mileage = [0.0] * T
+
+    soc = initial_soc
+    hours = 0.25
+    capacity = storage.rated_capacity_mwh
+    eta_chg = storage.charging_efficiency
+    eta_dis = storage.discharging_efficiency
+    self_discharge_mwh = storage.self_discharge_rate * hours * capacity
+
+    for t in range(T):
+        # 1. 更新预测器观测
+        if t > 0:
+            forecaster.update(t - 1, rt_lmp[t - 1], agc_commands[t - 1])
+
+        # 2. 确定窗口
+        end = min(t + horizon, T)
+        H = end - t
+
+        # 3. 生成预测
+        lmp_fc = forecaster.predict_lmp(t, H)
+        current_agc = agc_commands[t - 1] if t > 0 else 0.0
+        agc_fc = forecaster.predict_agc(t, H, current_agc, mode=agc_forecast_mode)
+        # 第 0 个时段用实际 AGC 命令
+        agc_fc[0] = agc_commands[t]
+
+        # 4. 截取子问题输入
+        sub_da_charge = da_charge[t:end]
+        sub_da_discharge = da_discharge[t:end]
+        sub_da_agc_cap = da_agc_cap[t:end]
+
+        # 5. 对窗口做 DP 优化
+        sub_final_soc_target = final_soc_target if end == T else None
+        (
+            sub_actual_charge, sub_actual_discharge,
+            sub_arbitrage_charge, sub_arbitrage_discharge,
+            sub_agc_charge, sub_agc_discharge,
+            sub_actual_agc, sub_agc_mileage, _,
+        ) = optimize_real_time(
+            storage=storage,
+            da_charge=sub_da_charge,
+            da_discharge=sub_da_discharge,
+            da_agc_cap=sub_da_agc_cap,
+            rt_lmp=lmp_fc,
+            agc_commands=agc_fc,
+            agc_mileage_price=agc_mileage_price,
+            settlement=settlement,
+            initial_soc=soc,
+            final_soc_target=sub_final_soc_target,
+            agc_reserve_mw=agc_reserve_mw,
+            n_states=n_states,
+        )
+
+        # 6. 只执行第一个时段
+        actual_charge[t] = sub_actual_charge[0]
+        actual_discharge[t] = sub_actual_discharge[0]
+        arbitrage_charge[t] = sub_arbitrage_charge[0]
+        arbitrage_discharge[t] = sub_arbitrage_discharge[0]
+        agc_charge[t] = sub_agc_charge[0]
+        agc_discharge[t] = sub_agc_discharge[0]
+        actual_agc[t] = sub_actual_agc[0]
+        agc_mileage[t] = sub_agc_mileage[0]
+
+        # 7. 更新 SOC
+        chg_dc = actual_charge[t] * hours * eta_chg
+        dis_dc = actual_discharge[t] * hours / eta_dis
+        soc += (chg_dc - dis_dc - self_discharge_mwh) / capacity
+        soc = max(storage.soc_min, min(storage.soc_max, soc))
+
+    final_soc = round(soc, 4)
+    return (
+        actual_charge, actual_discharge,
+        arbitrage_charge, arbitrage_discharge,
+        agc_charge, agc_discharge,
+        actual_agc, agc_mileage, final_soc,
     )

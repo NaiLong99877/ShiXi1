@@ -9,9 +9,11 @@ import os
 import random
 
 from models import StorageParams, SettlementParams, RealTimeInterval
-from optimizer import optimize_day_ahead, optimize_real_time, generate_agc_commands
+from optimizer import optimize_day_ahead, optimize_real_time, optimize_real_time_mpc, generate_agc_commands
 from energy_market import simulate_soc
 from validation import validate_dispatch_constraints
+
+import argparse
 
 # 工作目录
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -85,16 +87,20 @@ def generate_lmp_curve(rng: random.Random, is_weekend: bool):
 
 
 
-def generate_one_day(date_str: str, initial_soc: float = 0.50) -> dict:
+def generate_one_day(date_str: str, initial_soc: float = 0.50, use_mpc: bool = True, mpc_horizon: int = 8) -> dict:
     """
     生成单日的市场数据 (优化版 + AGC)
 
     - 日前: DP优化能量套利+AGC容量收益, 永远留1MW AGC裕量
-    - 实时: AGC命令随机下发(必须响应), DP在剩余容量内优化能量决策
+    - 实时: AGC命令随机下发(必须响应);
+            use_mpc=True 时, 采用滚动 MPC 优化 (默认);
+            use_mpc=False 时, 采用全局事后 (hindsight) 优化。
 
     Args:
         date_str: 日期字符串 YYYY-MM-DD
         initial_soc: 当日初始SOC (跨日结转, 第一天使用 storage_params 中的 initial_soc)
+        use_mpc: 是否使用滚动 MPC 实时调度
+        mpc_horizon: MPC 预测窗口长度 (默认 8 个 15 分钟时段 = 2 小时)
 
     Returns:
         { "day_ahead": {...}, "real_time": {...}, "est_final_soc": float }
@@ -167,17 +173,32 @@ def generate_one_day(date_str: str, initial_soc: float = 0.50) -> dict:
     rt_lmp_curve = [round(lmp_curve[i] + rng_rt.uniform(-6, 6), 2) for i in range(96)]
 
     # ---- 实时调度: AGC命令必须响应, 套利只能在日前中标范围内行权或放弃 ----
-    (
-        rt_actual_charge, rt_actual_discharge,
-        rt_arbitrage_charge, rt_arbitrage_discharge,
-        rt_agc_charge, rt_agc_discharge,
-        rt_agc_mw, rt_agc_miles, _
-    ) = optimize_real_time(
-        storage, charges, discharges, adj_agc_caps,
-        rt_lmp_curve, agc_commands, agc_mileage_price,
-        settlement, initial_soc,
-        final_soc_target=storage.initial_soc,
-    )
+    if use_mpc:
+        (
+            rt_actual_charge, rt_actual_discharge,
+            rt_arbitrage_charge, rt_arbitrage_discharge,
+            rt_agc_charge, rt_agc_discharge,
+            rt_agc_mw, rt_agc_miles, _
+        ) = optimize_real_time_mpc(
+            storage, charges, discharges, adj_agc_caps,
+            lmp_curve, rt_lmp_curve, agc_commands, agc_mileage_price,
+            settlement, initial_soc,
+            final_soc_target=storage.initial_soc,
+            horizon=mpc_horizon,
+            agc_forecast_mode="zero",
+        )
+    else:
+        (
+            rt_actual_charge, rt_actual_discharge,
+            rt_arbitrage_charge, rt_arbitrage_discharge,
+            rt_agc_charge, rt_agc_discharge,
+            rt_agc_mw, rt_agc_miles, _
+        ) = optimize_real_time(
+            storage, charges, discharges, adj_agc_caps,
+            rt_lmp_curve, agc_commands, agc_mileage_price,
+            settlement, initial_soc,
+            final_soc_target=storage.initial_soc,
+        )
 
     # ---- 用统一的SOC仿真计算实际运行轨迹(含自放电), 保证与结算端一致 ----
     rt_intervals_for_soc = [
@@ -266,13 +287,15 @@ def save_json(data, filename):
     print(f"  [OK] {filename}")
 
 
-def main():
+def main(use_mpc: bool = True, mpc_horizon: int = 8):
     ensure_dir(INPUT_DIR)
     ensure_dir(OUTPUT_DIR)
     weekday_names = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
     print("=" * 60)
     print(f"  生成 {len(DATES)} 天示例数据 ({DATES[0]} ~ {DATES[-1]})")
+    mode_str = "滚动 MPC" if use_mpc else "全局 hindsight"
+    print(f"  实时调度模式: {mode_str} (horizon={mpc_horizon})")
     print("=" * 60)
 
     # ===== 共用文件 (只生成一份) =====
@@ -345,7 +368,7 @@ def main():
         tag = f"{weekday_names[wd]}{'(周末)' if wd >= 5 else ''}"
         print(f"\n  {date_str} {tag}  初始SOC={carry_soc:.1%}")
 
-        data = generate_one_day(date_str, initial_soc=carry_soc)
+        data = generate_one_day(date_str, initial_soc=carry_soc, use_mpc=use_mpc, mpc_horizon=mpc_horizon)
         save_json(data["day_ahead"], f"{date_str}_day_ahead_market.json")
         # 实时调度结果 → data/output/ (它是优化器的计算结果, 不是市场输入)
         out_path = os.path.join(OUTPUT_DIR, f"{date_str}_real_time_dispatch.json")
@@ -364,4 +387,14 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="生成储能电站示例输入数据")
+    parser.add_argument(
+        "--no-mpc", action="store_true",
+        help="禁用滚动 MPC, 使用全局 hindsight 优化生成实时调度",
+    )
+    parser.add_argument(
+        "--horizon", type=int, default=8,
+        help="MPC 预测窗口长度 (默认 8, 即 2 小时)",
+    )
+    args = parser.parse_args()
+    main(use_mpc=not args.no_mpc, mpc_horizon=args.horizon)
